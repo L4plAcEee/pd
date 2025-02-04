@@ -182,7 +182,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     A: !$options.isPasswordValid,
     B: common_vendor.o((...args) => $options.submitPassword && $options.submitPassword(...args))
   } : {}, {
-    C: common_vendor.sr("toast", "76ebe9fd-0")
+    C: common_vendor.sr("toast", "dd751680-0")
   });
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render]]);

@@ -18,8 +18,8 @@
     }
   },
   "compileType": "miniprogram",
-  "libVersion": "3.7.6",
-  "appid": "wx95dd9a659a91de0f",
+  "libVersion": "3.7.7",
+  "appid": "touristappid",
   "projectname": "pd071",
   "condition": {},
   "editorSetting": {

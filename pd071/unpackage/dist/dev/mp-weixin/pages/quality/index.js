@@ -270,7 +270,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     I: $data.submitting,
     J: common_vendor.o((...args) => $options.handleSubmit && $options.handleSubmit(...args))
   }) : {}, {
-    K: common_vendor.sr("toast", "c0068ca0-0"),
+    K: common_vendor.sr("toast", "ed85aa1a-0"),
     L: $data.loading
   }, $data.loading ? {
     M: common_vendor.p({

@@ -238,7 +238,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     n: common_vendor.o((...args) => $options.cancelAuth && $options.cancelAuth(...args)),
     o: common_vendor.o((...args) => $options.confirmAuth && $options.confirmAuth(...args))
   } : {}, {
-    p: common_vendor.sr("toast", "f1ff1500-2")
+    p: common_vendor.sr("toast", "71225b83-2")
   });
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render]]);

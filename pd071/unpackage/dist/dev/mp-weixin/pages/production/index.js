@@ -138,7 +138,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     y: !$options.isValid || $data.submitting,
     z: common_vendor.o((...args) => $options.handleSubmit && $options.handleSubmit(...args))
   } : {}, {
-    A: common_vendor.sr("toast", "1d1acf04-0"),
+    A: common_vendor.sr("toast", "98a2074a-0"),
     B: $data.submitting
   }, $data.submitting ? {
     C: common_vendor.p({
