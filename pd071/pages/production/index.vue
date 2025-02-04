@@ -30,6 +30,15 @@
 
     <!-- 表单区域 -->
     <view class="form-content" v-if="selectedDept">
+	  <!-- 当选择的是其他部门时显示部门名称输入 -->
+	  <view class="form-item" v-if="selectedDept === 'OTHER'">
+		<text class="label required">部门名称</text>
+		<input
+		  class="input"
+		  v-model="formData.departmentName"
+		  placeholder="请输入部门名称"
+		/>
+	  </view>
       <!-- 产品编号 -->
       <view class="form-item">
         <text class="label required">产品编号</text>
@@ -122,29 +131,33 @@ export default {
     PdLoading
   },
 
-  data() {
-    return {
-      selectedDept: '', // MF: 磨房, OTHER: 其他部门
-      formData: {
-        productCode: '',
-        quantity: 1,
-        unitPrice: '',
-        totalPrice: 0,
-        remark: ''
-      },
-      submitting: false
-    }
-  },
+	data() {
+	  return {
+		selectedDept: '', // MF: 磨房, OTHER: 其他部门
+		formData: {
+		  productCode: '',
+		  departmentName: '',  // 新增字段，用于填写部门名称
+		  quantity: 1,
+		  unitPrice: '',
+		  totalPrice: 0,
+		  remark: ''
+		},
+		submitting: false
+	  }
+	},
 
   computed: {
-    isValid() {
-      const { productCode, quantity, unitPrice } = this.formData
-      return this.selectedDept && 
-             productCode && 
-             quantity > 0 && 
-             unitPrice && 
-             !isNaN(parseFloat(unitPrice))
-    },
+  isValid() {
+    const { productCode, departmentName, quantity, unitPrice } = this.formData;
+    // 当选择的是其他部门时，部门名称不能为空
+    const deptNameValid = this.selectedDept === 'OTHER' ? departmentName : true;
+    return this.selectedDept &&
+           productCode &&
+           deptNameValid &&
+           quantity > 0 &&
+           unitPrice &&
+           !isNaN(parseFloat(unitPrice));
+  },
     
     totalPrice() {
       if(!this.formData.unitPrice || !this.formData.quantity) return '0.00'
