@@ -36,18 +36,21 @@
           />
         </view>
       </view>
-      
-      <!-- 用户活跃度 -->
-      <view class="chart-card">
-        <view class="card-header">
-          <text class="card-title">用户活跃度</text>
-          <text class="more-btn" @tap="navigateTo('/pages/admin/users')">详情</text>
-        </view>
-        <view class="chart-container">
-          <user-activity-chart :data="activityData" />
-        </view>
-      </view>
     </view>
+	  <!-- 用户活跃度 -->
+	  <!-- 
+	  <view class="chart-card">
+	    <view class="card-header">
+	      <text class="card-title">用户活跃度</text>
+	      <text class="more-btn" @tap="navigateTo('/pages/admin/users')">详情</text>
+	    </view>
+	    <view class="chart-container">
+	      <user-activity-chart :data="activityData" />
+	    </view>
+	  </view>
+	  -->
+
+
 
     <!-- 待办事项 -->
     <view class="todo-section">
@@ -117,13 +120,13 @@
 <script>
 import PdToast from '@/components/pd-toast/pd-toast'
 import StorageChart from './components/storage-chart.vue'
-import UserActivityChart from './components/user-activity-chart.vue'
+// import UserActivityChart from './components/user-activity-chart.vue'
 
 export default {
   components: {
     PdToast,
     StorageChart,
-    UserActivityChart
+    // UserActivityChart
   },
 
   data() {
@@ -158,17 +161,17 @@ export default {
       },
 
       // 活跃度数据
-      activityData: {
-        roles: [
-          { name: '供应商', value: 40 },
-          { name: '生产部', value: 35 },
-          { name: '品控部', value: 15 },
-          { name: '管理员', value: 10 }
-        ],
-        timeline: [
-          /* 时段数据 */
-        ]
-      },
+      // activityData: {
+      //   roles: [
+      //     { name: '供应商', value: 40 },
+      //     { name: '生产部', value: 35 },
+      //     { name: '品控部', value: 15 },
+      //     { name: '管理员', value: 10 }
+      //   ],
+      //   timeline: [
+      //     /* 时段数据 */
+      //   ]
+      // },
 
       // 待办事项
       todoList: [
