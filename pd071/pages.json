@@ -59,6 +59,12 @@
 						"navigationBarTitleText": "品控部门",
 						"enablePullDownRefresh": true
 					}
+				},
+				{
+					"path": "inspection",
+					"style": {
+						"navigationBarTitleText": "质检详情"
+					}
 				}
 			]
 		},

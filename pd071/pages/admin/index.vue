@@ -16,42 +16,6 @@
       </view>
     </view>
 
-    <!-- 数据概览 -->
-    <view class="data-overview">
-      <view class="section-header">
-        <text class="section-title">数据概览</text>
-        <text class="refresh-btn" @tap="refreshData">刷新</text>
-      </view>
-      
-      <!-- 仓库状态 -->
-      <view class="chart-card">
-        <view class="card-header">
-          <text class="card-title">仓库状态</text>
-          <text class="more-btn" @tap="navigateTo('/pages/admin/storage')">详情</text>
-        </view>
-        <view class="chart-container">
-          <storage-chart 
-            :data="storageData"
-            @tap="showStorageDetail"
-          />
-        </view>
-      </view>
-    </view>
-	  <!-- 用户活跃度 -->
-	  <!-- 
-	  <view class="chart-card">
-	    <view class="card-header">
-	      <text class="card-title">用户活跃度</text>
-	      <text class="more-btn" @tap="navigateTo('/pages/admin/users')">详情</text>
-	    </view>
-	    <view class="chart-container">
-	      <user-activity-chart :data="activityData" />
-	    </view>
-	  </view>
-	  -->
-
-
-
     <!-- 待办事项 -->
     <view class="todo-section">
       <view class="section-header">
@@ -119,14 +83,10 @@
 
 <script>
 import PdToast from '@/components/pd-toast/pd-toast'
-import StorageChart from './components/storage-chart.vue'
-// import UserActivityChart from './components/user-activity-chart.vue'
 
 export default {
   components: {
     PdToast,
-    StorageChart,
-    // UserActivityChart
   },
 
   data() {
@@ -152,26 +112,6 @@ export default {
           type: 'settlement'
         }
       ],
-
-      // 仓库数据
-      storageData: {
-        supplier: 30,
-        production: 45,
-        management: 25
-      },
-
-      // 活跃度数据
-      // activityData: {
-      //   roles: [
-      //     { name: '供应商', value: 40 },
-      //     { name: '生产部', value: 35 },
-      //     { name: '品控部', value: 15 },
-      //     { name: '管理员', value: 10 }
-      //   ],
-      //   timeline: [
-      //     /* 时段数据 */
-      //   ]
-      // },
 
       // 待办事项
       todoList: [
@@ -225,24 +165,6 @@ export default {
   },
 
   methods: {
-    // 刷新数据
-    async refreshData() {
-      try {
-        // TODO: 调用API获取最新数据
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        
-        this.$refs.toast.show({
-          type: 'success',
-          message: '数据已更新'
-        })
-      } catch(e) {
-        this.$refs.toast.show({
-          type: 'error',
-          message: '更新失败'
-        })
-      }
-    },
-
     // 处理快捷操作
     handleQuickAction(type) {
       switch(type) {
@@ -286,9 +208,7 @@ export default {
       }
 
       try {
-        // TODO: 验证密码
         await new Promise(resolve => setTimeout(resolve, 500))
-        
         this.showAuth = false
         this.authPassword = ''
         
@@ -306,7 +226,6 @@ export default {
 
     // 处理待办
     handleTodo(item) {
-      // TODO: 根据待办类型处理
       console.log('处理待办:', item)
     },
 
@@ -317,7 +236,7 @@ export default {
   },
 
   onShow() {
-    this.refreshData()
+    // 删除 refreshData 调用
   }
 }
 </script>
@@ -364,58 +283,6 @@ export default {
 .action-desc {
   font-size: 24rpx;
   color: #999;
-}
-
-/* 数据概览 */
-.data-overview {
-  margin-bottom: 30rpx;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20rpx;
-}
-
-.section-title {
-  font-size: 32rpx;
-  color: #333;
-  font-weight: bold;
-}
-
-.refresh-btn {
-  font-size: 28rpx;
-  color: #1890ff;
-}
-
-.chart-card {
-  background: #fff;
-  border-radius: 12rpx;
-  padding: 20rpx;
-  margin-bottom: 20rpx;
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20rpx;
-}
-
-.card-title {
-  font-size: 28rpx;
-  color: #333;
-  font-weight: bold;
-}
-
-.more-btn {
-  font-size: 24rpx;
-  color: #666;
-}
-
-.chart-container {
-  height: 300rpx;
 }
 
 /* 待办事项 */
