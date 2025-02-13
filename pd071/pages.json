@@ -76,6 +76,42 @@
 					"style": {
 						"navigationBarTitleText": "管理后台"
 					}
+				},
+				{
+					"path": "supplier/index",
+					"style": {
+						"navigationBarTitleText": "供应商管理"
+					}
+				},
+				{
+					"path": "production/index",
+					"style": {
+						"navigationBarTitleText": "生产管理"
+					}
+				},
+				{
+					"path": "quality/index",
+					"style": {
+						"navigationBarTitleText": "品控管理"
+					}
+				},
+				{
+					"path": "warehouse/index",
+					"style": {
+						"navigationBarTitleText": "仓库管理"
+					}
+				},
+				{
+					"path": "users/index",
+					"style": {
+						"navigationBarTitleText": "用户管理"
+					}
+				},
+				{
+					"path": "settings/index",
+					"style": {
+						"navigationBarTitleText": "系统设置"
+					}
 				}
 			]
 		}

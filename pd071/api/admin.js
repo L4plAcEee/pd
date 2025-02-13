@@ -54,5 +54,82 @@ export default {
         loading.hide()
       }, 500)
     })
+  },
+
+  // 获取生产数据列表
+  getProductionList(params = {}) {
+    return new Promise((resolve) => {
+      loading.show('加载数据...')
+      setTimeout(() => {
+        resolve({
+          data: {
+            total: 35,
+            list: [
+              {
+                id: '1',
+                deptName: '磨房一部',
+                productName: '精磨面粉',
+                productCode: 'MF-001',
+                quantity: 1000,
+                unit: 'kg',
+                price: 15.5,
+                status: 'pending',
+                statusText: '待品控',
+                qualityStatus: 'pending',
+                qualityStatusText: '待品控',
+                createTime: '2024-01-20 10:30:00'
+              }
+              // ... 其他数据
+            ]
+          }
+        })
+        loading.hide()
+      }, 500)
+    })
+  },
+
+  // 品控管理相关API
+  getQualityList(params = {}) {
+    return new Promise((resolve) => {
+      loading.show('加载数据...')
+      setTimeout(() => {
+        resolve({
+          data: {
+            total: 35,
+            list: [
+              {
+                id: '1',
+                orderId: 'QC20240120001',
+                productName: '精磨面粉',
+                productCode: 'MF-001',
+                quantity: 1000,
+                unit: 'kg',
+                passQuantity: 950,
+                qualityStatus: 'partial',
+                qualityStatusText: '部分合格',
+                rejectReason: '部分产品水分含量超标',
+                inspectionTime: '2024-01-20 10:30:00',
+                canEdit: true
+              }
+              // ... 其他数据
+            ]
+          }
+        })
+        loading.hide()
+      }, 500)
+    })
+  },
+
+  updateQualityResult(data) {
+    return new Promise((resolve) => {
+      loading.show('提交修改...')
+      setTimeout(() => {
+        resolve({
+          success: true,
+          message: '修改成功'
+        })
+        loading.hide()
+      }, 500)
+    })
   }
 } 

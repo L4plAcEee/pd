@@ -1,122 +1,170 @@
 <template>
   <view class="production-container">
-    <!-- 部门选择 -->
-    <view class="dept-select">
-      <text class="select-title">请选择部门</text>
-      <view class="dept-options">
-        <!-- 磨房部门 -->
-        <view 
-          class="dept-item"
-          :class="{'dept-active': selectedDept === 'MF'}"
-          @tap="selectDept('MF')"
-        >
-          <image class="dept-icon" src="/static/mf.png" mode="aspectFit"></image>
-          <text class="dept-name">磨房部门</text>
-          <text class="dept-desc">数据流转至品控部审核</text>
-        </view>
+    <!-- 添加下拉刷新 -->
+    <scroll-view 
+      scroll-y 
+      refresher-enabled
+      :refresher-triggered="refreshing"
+      @refresherrefresh="onRefresh"
+      class="scroll-container"
+    >
+      <!-- 部门选择 -->
+      <view class="dept-select">
+        <text class="select-title">请选择部门</text>
+        <view class="dept-options">
+          <!-- 磨房部门 -->
+          <view 
+            class="dept-item"
+            :class="{'dept-active': selectedDept === 'MF'}"
+            @tap="selectDept('MF')"
+          >
+            <image class="dept-icon" src="/static/mf.png" mode="aspectFit"></image>
+            <text class="dept-name">磨房部门</text>
+            <text class="dept-desc">数据流转至品控部审核</text>
+          </view>
 
-        <!-- 其他部门 -->
-        <view 
-          class="dept-item"
-          :class="{'dept-active': selectedDept === 'OTHER'}"
-          @tap="selectDept('OTHER')"
-        >
-          <image class="dept-icon" src="/static/other.png" mode="aspectFit"></image>
-          <text class="dept-name">其他部门</text>
-          <text class="dept-desc">数据直接提交管理员审核</text>
+          <!-- 其他部门 -->
+          <view 
+            class="dept-item"
+            :class="{'dept-active': selectedDept === 'OTHER'}"
+            @tap="selectDept('OTHER')"
+          >
+            <image class="dept-icon" src="/static/other.png" mode="aspectFit"></image>
+            <text class="dept-name">其他部门</text>
+            <text class="dept-desc">数据直接提交管理员审核</text>
+          </view>
         </view>
       </view>
-    </view>
 
-    <!-- 表单区域 -->
-    <view class="form-content" v-if="selectedDept">
-	  <!-- 当选择的是其他部门时显示部门名称输入 -->
-	  <view class="form-item" v-if="selectedDept === 'OTHER'">
-		<text class="label required">部门名称</text>
-		<input
-		  class="input"
-		  v-model="formData.departmentName"
-		  placeholder="请输入部门名称"
-		/>
-	  </view>
-      <!-- 产品编号 -->
-      <view class="form-item">
-        <text class="label required">产品编号</text>
-        <input
-          class="input"
-          v-model="formData.productCode"
-          placeholder="请输入产品编号"
-        />
-      </view>
-
-      <!-- 生产数量 -->
-      <view class="form-item">
-        <text class="label required">生产数量</text>
-        <view class="stepper">
-          <text 
-            class="step-btn"
-            @tap="updateQuantity('minus')"
-          >-</text>
+      <!-- 表单区域 -->
+      <view class="form-content" v-if="selectedDept">
+        <!-- 当选择的是其他部门时显示部门名称输入 -->
+        <view class="form-item" v-if="selectedDept === 'OTHER'">
+          <text class="label required">部门名称</text>
           <input
-            class="step-input"
-            type="number"
-            v-model="formData.quantity"
+            class="input"
+            v-model="formData.departmentName"
+            placeholder="请输入部门名称"
           />
-          <text 
-            class="step-btn"
-            @tap="updateQuantity('plus')"
-          >+</text>
+        </view>
+
+        <!-- 新增产品名称 -->
+        <view class="form-item">
+          <text class="label required">产品名称</text>
+          <view class="input-wrap">
+            <input
+              class="input"
+              v-model="formData.productName"
+              placeholder="请输入或选择产品名称"
+              @focus="showProductList = true"
+              @blur="onProductNameBlur"
+            />
+            <!-- 产品列表下拉框 -->
+            <view class="history-dropdown" v-if="showProductList && filteredProducts.length">
+              <view 
+                class="history-item"
+                v-for="(item, index) in filteredProducts"
+                :key="index"
+                @tap="selectProduct(item)"
+              >
+                <text class="item-name">{{item.name}}</text>
+                <text class="item-price">￥{{formatPrice(item.lastPrice)}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+
+        <!-- 产品编号 -->
+        <view class="form-item">
+          <text class="label required">产品编号</text>
+          <input
+            class="input"
+            v-model="formData.productCode"
+            placeholder="请输入产品编号"
+          />
+        </view>
+
+        <!-- 生产数量 -->
+        <view class="form-item">
+          <text class="label required">生产数量</text>
+          <view class="stepper">
+            <text 
+              class="step-btn"
+              @tap="updateQuantity('minus')"
+            >-</text>
+            <input
+              class="step-input"
+              type="number"
+              v-model="formData.quantity"
+            />
+            <text 
+              class="step-btn"
+              @tap="updateQuantity('plus')"
+            >+</text>
+          </view>
+        </view>
+
+        <!-- 单价 -->
+        <view class="form-item">
+          <text class="label required">单价(元)</text>
+          <input
+            class="input price-input"
+            type="digit"
+            v-model="formData.unitPrice"
+            @input="calculateTotal"
+            placeholder="请输入单价"
+          />
+        </view>
+
+        <!-- 总价 -->
+        <view class="form-item">
+          <text class="label">总价(元)</text>
+          <view class="total-price">
+            <text>¥ {{totalPrice}}</text>
+            <text class="price-tip" v-if="formData.unitPrice && formData.quantity">
+              {{formData.quantity}} × {{formData.unitPrice}}
+            </text>
+          </view>
+        </view>
+
+        <!-- 备注信息 -->
+        <view class="form-item">
+          <text class="label">备注说明</text>
+          <textarea
+            class="textarea"
+            v-model="formData.remark"
+            placeholder="请输入备注说明"
+          />
         </view>
       </view>
 
-      <!-- 单价 -->
-      <view class="form-item">
-        <text class="label required">单价(元)</text>
-        <input
-          class="input price-input"
-          type="digit"
-          v-model="formData.unitPrice"
-          @input="calculateTotal"
-          placeholder="请输入单价"
-        />
-      </view>
-
-      <!-- 总价 -->
-      <view class="form-item">
-        <text class="label">总价(元)</text>
-        <view class="total-price">
-          <text>¥ {{totalPrice}}</text>
-          <text class="price-tip" v-if="formData.unitPrice && formData.quantity">
-            {{formData.quantity}} × {{formData.unitPrice}}
-          </text>
+      <!-- 新增快捷操作区 -->
+      <view class="quick-actions" v-if="selectedDept">
+        <view class="action-item" @tap="scanCode">
+          <text class="action-icon">📷</text>
+          <text class="action-text">扫码录入</text>
+        </view>
+        <view class="action-item" @tap="viewHistory">
+          <text class="action-icon">📋</text>
+          <text class="action-text">历史记录</text>
         </view>
       </view>
 
-      <!-- 备注信息 -->
-      <view class="form-item">
-        <text class="label">备注说明</text>
-        <textarea
-          class="textarea"
-          v-model="formData.remark"
-          placeholder="请输入备注说明"
-        />
+      <!-- 提交按钮 -->
+      <view class="footer" v-if="selectedDept">
+        <button 
+          class="submit-btn"
+          :disabled="!isValid || submitting"
+          @tap="handleSubmit"
+        >
+          提交{{selectedDept === 'MF' ? '(待品控审核)' : '(待管理审核)'}}
+        </button>
       </view>
-    </view>
 
-    <!-- 提交按钮 -->
-    <view class="footer" v-if="selectedDept">
-      <button 
-        class="submit-btn"
-        :disabled="!isValid || submitting"
-        @tap="handleSubmit"
-      >
-        提交{{selectedDept === 'MF' ? '(待品控审核)' : '(待管理审核)'}}
-      </button>
-    </view>
-
-    <!-- 提示组件 -->
-    <pd-toast ref="toast" />
-    <pd-loading v-if="submitting" type="global" text="提交中..." />
+      <!-- 提示组件 -->
+      <pd-toast ref="toast" />
+      <pd-loading v-if="submitting" type="global" text="提交中..." />
+    </scroll-view>
   </view>
 </template>
 
@@ -131,34 +179,53 @@ export default {
     PdLoading
   },
 
-	data() {
-	  return {
-		selectedDept: '', // MF: 磨房, OTHER: 其他部门
-		formData: {
-		  productCode: '',
-		  departmentName: '',  // 新增字段，用于填写部门名称
-		  quantity: 1,
-		  unitPrice: '',
-		  totalPrice: 0,
-		  remark: ''
-		},
-		submitting: false
-	  }
-	},
+  data() {
+    return {
+      selectedDept: '',
+      formData: {
+        productName: '',
+        productCode: '',
+        departmentName: '',
+        quantity: 1,
+        unitPrice: '',
+        totalPrice: 0,
+        remark: ''
+      },
+      submitting: false,
+      refreshing: false,
+      showProductList: false,
+      productList: [],
+    }
+  },
 
   computed: {
-  isValid() {
-    const { productCode, departmentName, quantity, unitPrice } = this.formData;
-    // 当选择的是其他部门时，部门名称不能为空
-    const deptNameValid = this.selectedDept === 'OTHER' ? departmentName : true;
-    return this.selectedDept &&
-           productCode &&
-           deptNameValid &&
-           quantity > 0 &&
-           unitPrice &&
-           !isNaN(parseFloat(unitPrice));
-  },
-    
+    filteredProducts() {
+      if(!this.formData.productName) return this.productList
+      return this.productList
+        .filter(item => item.name.includes(this.formData.productName))
+        .slice(0, 5)
+    },
+
+    isValid() {
+      const { 
+        productName,
+        productCode,
+        departmentName,
+        quantity,
+        unitPrice,
+      } = this.formData
+
+      const baseValid = productName &&
+        productCode &&
+        quantity > 0 &&
+        unitPrice &&
+        !isNaN(parseFloat(unitPrice))
+
+      const deptNameValid = this.selectedDept === 'OTHER' ? departmentName : true
+
+      return baseValid && deptNameValid
+    },
+
     totalPrice() {
       if(!this.formData.unitPrice || !this.formData.quantity) return '0.00'
       const total = this.formData.quantity * parseFloat(this.formData.unitPrice)
@@ -167,13 +234,57 @@ export default {
   },
 
   methods: {
-    // 选择部门
+    async initData() {
+      try {
+        const { data } = await this.$api.production.getProductList()
+        this.productList = data.list || []
+      } catch(e) {
+        this.$refs.toast.show({
+          type: 'error',
+          message: '数据加载失败'
+        })
+      }
+    },
+
+    selectProduct(item) {
+      this.formData.productName = item.name
+      this.formData.unitPrice = item.lastPrice
+      this.showProductList = false
+      this.calculateTotal()
+    },
+
+    onProductNameBlur() {
+      setTimeout(() => {
+        this.showProductList = false
+      }, 200)
+    },
+
+    async scanCode() {
+      try {
+        const { result } = await uni.scanCode()
+        const { data } = await this.$api.production.getProductByCode(result)
+        this.formData.productName = data.name
+        this.formData.productCode = data.code
+        this.formData.unitPrice = data.suggestedPrice
+      } catch(e) {
+        this.$refs.toast.show({
+          type: 'error',
+          message: '扫码失败'
+        })
+      }
+    },
+
+    viewHistory() {
+      uni.navigateTo({
+        url: '/pages/production/history'
+      })
+    },
+
     selectDept(dept) {
       this.selectedDept = dept
       this.resetForm()
     },
 
-    // 更新数量
     updateQuantity(type) {
       if(type === 'minus' && this.formData.quantity > 1) {
         this.formData.quantity--
@@ -183,12 +294,10 @@ export default {
       this.calculateTotal()
     },
 
-    // 计算总价
     calculateTotal() {
       this.formData.totalPrice = this.totalPrice
     },
 
-    // 提交表单
     async handleSubmit() {
       if(!this.isValid || this.submitting) return
       
@@ -197,7 +306,6 @@ export default {
         const orderData = {
           ...this.formData,
           deptCode: this.selectedDept,
-          // 磨房部门提交到品控审核，其他部门直接到管理员审核
           status: this.selectedDept === 'MF' ? 
             ORDER_STATUS.QC_REVIEW : 
             ORDER_STATUS.PENDING
@@ -224,15 +332,22 @@ export default {
       }
     },
 
-    // 重置表单
     resetForm() {
       this.formData = {
+        productName: '',
         productCode: '',
+        departmentName: '',
         quantity: 1,
         unitPrice: '',
         totalPrice: 0,
         remark: ''
       }
+    },
+
+    onRefresh() {
+      this.refreshing = true
+      this.initData()
+      this.refreshing = false
     }
   }
 }
@@ -468,5 +583,69 @@ export default {
   background: #fff;
   border-radius: 12rpx;
   padding: 30rpx;
+}
+
+/* 新增样式 */
+.input-wrap {
+  position: relative;
+}
+
+.input-tip {
+  font-size: 24rpx;
+  color: #999;
+  margin-top: 8rpx;
+}
+
+.history-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-radius: 8rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0,0,0,0.1);
+  z-index: 100;
+}
+
+.history-item {
+  padding: 20rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.item-name {
+  font-size: 28rpx;
+  color: #333;
+}
+
+.item-price {
+  font-size: 24rpx;
+  color: #999;
+}
+
+/* 新增快捷操作区 */
+.quick-actions {
+  display: flex;
+  justify-content: space-between;
+  padding: 20rpx;
+}
+
+.action-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.action-icon {
+  font-size: 32rpx;
+  color: #333;
+}
+
+.action-text {
+  font-size: 24rpx;
+  color: #333;
 }
 </style> 

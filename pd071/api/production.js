@@ -63,5 +63,51 @@ export default {
         loading.hide()
       }, 500)
     })
+  },
+
+  // 获取产品列表
+  getProductList() {
+    return new Promise((resolve) => {
+      loading.show('加载产品列表...')
+      setTimeout(() => {
+        resolve({
+          data: {
+            list: [
+              {
+                name: '产品A',
+                code: 'S230815-0001',
+                lastPrice: 15.5,
+                suggestedPrice: 15.8
+              },
+              {
+                name: '产品B',
+                code: 'S230815-0002',
+                lastPrice: 12.5,
+                suggestedPrice: 12.8
+              }
+            ]
+          }
+        })
+        loading.hide()
+      }, 500)
+    })
+  },
+
+  // 扫码获取产品信息
+  getProductByCode(code) {
+    return new Promise((resolve) => {
+      loading.show('获取产品信息...')
+      setTimeout(() => {
+        resolve({
+          data: {
+            name: '产品A',
+            code: 'S230815-0001',
+            suggestedPrice: 15.8,
+            lastPrice: 15.5
+          }
+        })
+        loading.hide()
+      }, 500)
+    })
   }
 } 
