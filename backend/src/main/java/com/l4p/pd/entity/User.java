@@ -20,12 +20,12 @@ public class User {
     @Column(name = "phone_number", nullable = false, unique = true, length = 20)
     private String phoneNumber;
 
-    @Column(nullable = false, length = 255)
+    @Column(nullable = false)
     private String password;
 
     @Column(nullable = false, length = 50)
     private String role;
 
-    // Getter 和 Setter 方法
+
 
 }
