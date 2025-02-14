@@ -16,14 +16,14 @@
       </view>
     </view>
 
-    <!-- 搜索和筛选区 -->
+    <!-- 搜索和筛选区域 -->
     <view class="filter-section">
       <view class="search-box">
         <text class="iconfont icon-search"></text>
         <input 
           class="search-input"
           v-model="searchKey"
-          placeholder="搜索供应商名称/联系人"
+          placeholder="搜索供应商/货物名称"
           @input="onSearch"
         />
       </view>
@@ -31,33 +31,21 @@
       <view class="filter-options">
         <picker 
           mode="selector" 
-          :range="statusOptions" 
+          :range="auditStatus" 
           @change="onStatusChange"
         >
           <view class="filter-item">
             <text class="iconfont icon-filter"></text>
-            <text>供应商状态</text>
-            <text class="arrow">▼</text>
-          </view>
-        </picker>
-        
-        <picker 
-          mode="selector"
-          :range="categoryOptions"
-          @change="onCategoryChange"
-        >
-          <view class="filter-item">
-            <text class="iconfont icon-category"></text>
-            <text>产品类别</text>
+            <text>审核状态</text>
             <text class="arrow">▼</text>
           </view>
         </picker>
       </view>
     </view>
 
-    <!-- 供应商列表 -->
+    <!-- 货物列表 -->
     <scroll-view 
-      class="supplier-list"
+      class="goods-list"
       scroll-y
       @scrolltolower="loadMore"
       refresher-enabled
@@ -65,194 +53,121 @@
       @refresherrefresh="refresh"
     >
       <view 
-        class="supplier-item"
-        v-for="(item, index) in dataList"
+        class="goods-item"
+        v-for="(item, index) in goodsList"
         :key="index"
       >
         <view class="item-header">
-          <view class="header-left">
-            <text class="supplier-name">{{item.name}}</text>
-            <text class="supplier-code">{{item.code}}</text>
-          </view>
+          <text class="supplier-name">{{item.supplierName}}</text>
           <text class="status" :class="item.status">{{item.statusText}}</text>
         </view>
         
         <view class="item-content">
-          <view class="info-grid">
-            <view class="info-block">
-              <text class="block-label">主营产品</text>
-              <text class="block-value">{{item.mainProducts}}</text>
-            </view>
-            <view class="info-block">
-              <text class="block-label">合作时长</text>
-              <text class="block-value">{{item.cooperationTime}}</text>
-            </view>
-            <view class="info-block">
-              <text class="block-label">月均交易</text>
-              <text class="block-value">{{item.monthlyTrade}}</text>
-            </view>
+          <view class="info-row">
+            <text class="label">货物名称：</text>
+            <text class="value">{{item.goodsName}}</text>
           </view>
-          
-          <view class="contact-info">
-            <view class="contact-item">
-              <text class="iconfont icon-user"></text>
-              <text class="label">联系人：</text>
-              <text class="value">{{item.contact}}</text>
-            </view>
-            <view class="contact-item">
-              <text class="iconfont icon-phone"></text>
-              <text class="label">联系电话：</text>
-              <text class="value">{{item.phone}}</text>
-            </view>
-            <view class="contact-item">
-              <text class="iconfont icon-location"></text>
-              <text class="label">地址：</text>
-              <text class="value">{{item.address}}</text>
-            </view>
+          <view class="info-row">
+            <text class="label">数量/规格：</text>
+            <text class="value">{{item.quantity}}{{item.unit}}</text>
           </view>
-          
-          <view class="quality-info">
-            <view class="quality-item">
-              <text class="quality-label">产品合格率</text>
-              <view class="progress-bar">
-                <view 
-                  class="progress" 
-                  :style="{width: item.qualityRate + '%'}"
-                  :class="getQualityClass(item.qualityRate)"
-                ></view>
-              </view>
-              <text class="quality-value">{{item.qualityRate}}%</text>
-            </view>
-            <view class="quality-item">
-              <text class="quality-label">订单准时率</text>
-              <view class="progress-bar">
-                <view 
-                  class="progress" 
-                  :style="{width: item.onTimeRate + '%'}"
-                  :class="getQualityClass(item.onTimeRate)"
-                ></view>
-              </view>
-              <text class="quality-value">{{item.onTimeRate}}%</text>
-            </view>
+          <view class="info-row">
+            <text class="label">提交时间：</text>
+            <text class="value">{{item.submitTime}}</text>
+          </view>
+          <view class="info-row" v-if="item.status === 'rejected'">
+            <text class="label">拒绝原因：</text>
+            <text class="value reject-reason">{{item.rejectReason}}</text>
           </view>
         </view>
         
-        <!-- 操作按钮 -->
-        <view class="item-actions">
-          <button 
-            class="action-btn view"
-            @tap="viewDetail(item)"
-          >
-            <text class="iconfont icon-view"></text>
-            <text>详情</text>
+        <view class="item-footer">
+          <button class="action-btn detail" @tap="viewDetail(item)">
+            查看详情
           </button>
-          <button 
-            class="action-btn edit"
-            @tap="editItem(item)"
-          >
-            <text class="iconfont icon-edit"></text>
-            <text>编辑</text>
-          </button>
-          <button 
-            class="action-btn history"
-            @tap="viewHistory(item)"
-          >
-            <text class="iconfont icon-history"></text>
-            <text>历史</text>
-          </button>
+          <template v-if="item.status === 'pending'">
+            <button class="action-btn reject" @tap="showRejectModal(item)">
+              拒绝
+            </button>
+            <button class="action-btn approve" @tap="approveGoods(item)">
+              通过
+            </button>
+          </template>
         </view>
       </view>
-
-      <!-- 加载状态 -->
-      <view class="loading-more" v-if="loading">
-        <text class="iconfont icon-loading loading-icon"></text>
-        <text>加载中...</text>
-      </view>
-      <view class="no-more" v-if="!hasMore">没有更多数据了</view>
     </scroll-view>
 
-    <!-- 添加按钮 -->
-    <view class="add-btn" @tap="showAddModal">
-      <text class="iconfont icon-add"></text>
-    </view>
-
-    <!-- 编辑弹窗 -->
-    <uni-popup ref="editPopup" type="center">
-      <view class="edit-modal">
+    <!-- 详情弹窗 -->
+    <uni-popup ref="detailPopup" type="center">
+      <view class="detail-modal">
         <view class="modal-header">
-          <text class="modal-title">{{editingItem ? '编辑数据' : '添加数据'}}</text>
-          <text class="close-btn" @tap="closeEditModal">×</text>
+          <text class="modal-title">货物详情</text>
+          <text class="close-btn" @tap="closeDetailPopup">×</text>
         </view>
         
         <view class="modal-content">
-          <!-- 表单内容 -->
-          <view class="form-item">
-            <text class="form-label">供应商名称</text>
-            <input 
-              class="form-input"
-              v-model="formData.supplierName"
-              placeholder="请输入供应商名称"
-            />
+          <view class="detail-row">
+            <text class="label">供应商</text>
+            <text class="value">{{selectedItem?.supplierName}}</text>
           </view>
-          
-          <view class="form-item">
-            <text class="form-label">产品名称</text>
-            <input 
-              class="form-input"
-              v-model="formData.productName"
-              placeholder="请输入产品名称"
-            />
+          <view class="detail-row">
+            <text class="label">货物名称</text>
+            <text class="value">{{selectedItem?.goodsName}}</text>
           </view>
-          
-          <view class="form-item">
-            <text class="form-label">数量</text>
-            <input 
-              class="form-input"
-              type="number"
-              v-model="formData.quantity"
-              placeholder="请输入数量"
-            />
+          <view class="detail-row">
+            <text class="label">数量规格</text>
+            <text class="value">{{selectedItem?.quantity}}{{selectedItem?.unit}}</text>
           </view>
-          
-          <view class="form-item">
-            <text class="form-label">单价</text>
-            <input 
-              class="form-input"
-              type="digit"
-              v-model="formData.price"
-              placeholder="请输入单价"
-            />
+          <view class="detail-row">
+            <text class="label">生产日期</text>
+            <text class="value">{{selectedItem?.productionDate}}</text>
           </view>
-        </view>
-        
-        <view class="modal-footer">
-          <button 
-            class="modal-btn cancel"
-            @tap="closeEditModal"
-          >取消</button>
-          <button 
-            class="modal-btn confirm"
-            @tap="submitForm"
-          >确定</button>
+          <view class="detail-row">
+            <text class="label">保质期</text>
+            <text class="value">{{selectedItem?.shelfLife}}</text>
+          </view>
+          <view class="detail-row">
+            <text class="label">批次号</text>
+            <text class="value">{{selectedItem?.batchNo}}</text>
+          </view>
+          <view class="detail-row">
+            <text class="label">提交时间</text>
+            <text class="value">{{selectedItem?.submitTime}}</text>
+          </view>
+          <view class="detail-row">
+            <text class="label">备注说明</text>
+            <text class="value">{{selectedItem?.remark || '无'}}</text>
+          </view>
         </view>
       </view>
     </uni-popup>
 
-    <!-- 删除确认弹窗 -->
-    <uni-popup ref="deletePopup" type="dialog">
-      <uni-popup-dialog
-        type="warning"
-        title="确认删除"
-        content="是否确认删除该条数据？"
-        :before-close="true"
-        @confirm="confirmDelete"
-        @close="closeDeletePopup"
-      />
+    <!-- 拒绝原因弹窗 -->
+    <uni-popup ref="rejectPopup" type="center">
+      <view class="reject-modal">
+        <view class="modal-header">
+          <text class="modal-title">拒绝原因</text>
+          <text class="close-btn" @tap="closeRejectPopup">×</text>
+        </view>
+        
+        <view class="modal-content">
+          <textarea
+            class="reject-reason"
+            v-model="rejectReason"
+            placeholder="请输入拒绝原因"
+          />
+        </view>
+        
+        <view class="modal-footer">
+          <button class="modal-btn cancel" @tap="closeRejectPopup">取消</button>
+          <button class="modal-btn confirm" @tap="rejectGoods">确定</button>
+        </view>
+      </view>
     </uni-popup>
   </view>
 </template>
 
-<style>
+<style lang="scss">
 .supplier-container {
   min-height: 100vh;
   background: #f5f7fa;
@@ -264,29 +179,43 @@
   display: flex;
   gap: 20rpx;
   margin-bottom: 30rpx;
-}
-
-.stat-card {
-  flex: 1;
-  background: #fff;
-  border-radius: 12rpx;
-  padding: 24rpx;
-  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.05);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.stat-value {
-  font-size: 40rpx;
-  font-weight: bold;
-  color: #1890ff;
-  margin-bottom: 12rpx;
-}
-
-.stat-label {
-  font-size: 26rpx;
-  color: #666;
+  
+  .stat-card {
+    flex: 1;
+    background: #fff;
+    border-radius: 12rpx;
+    padding: 24rpx;
+    box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    
+    &:nth-child(1) {
+      .stat-value { color: #1890ff; }
+      background: linear-gradient(135deg, #e6f7ff 0%, #ffffff 100%);
+    }
+    
+    &:nth-child(2) {
+      .stat-value { color: #52c41a; }
+      background: linear-gradient(135deg, #f6ffed 0%, #ffffff 100%);
+    }
+    
+    &:nth-child(3) {
+      .stat-value { color: #faad14; }
+      background: linear-gradient(135deg, #fff7e6 0%, #ffffff 100%);
+    }
+    
+    .stat-value {
+      font-size: 40rpx;
+      font-weight: bold;
+      margin-bottom: 12rpx;
+    }
+    
+    .stat-label {
+      font-size: 26rpx;
+      color: #666;
+    }
+  }
 }
 
 /* 搜索和筛选区样式 */
@@ -296,275 +225,341 @@
   padding: 20rpx;
   margin-bottom: 20rpx;
   box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.05);
+  
+  .search-box {
+    display: flex;
+    align-items: center;
+    background: #f5f7fa;
+    border-radius: 8rpx;
+    padding: 16rpx;
+    margin-bottom: 20rpx;
+    
+    .icon-search {
+      font-size: 32rpx;
+      color: #999;
+      margin-right: 16rpx;
+    }
+    
+    .search-input {
+      flex: 1;
+      font-size: 28rpx;
+      height: 48rpx;
+      line-height: 48rpx;
+    }
+  }
+  
+  .filter-options {
+    display: flex;
+    gap: 20rpx;
+    
+    .filter-item {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f5f7fa;
+      padding: 16rpx;
+      border-radius: 8rpx;
+      font-size: 28rpx;
+      color: #666;
+      transition: all 0.3s;
+      
+      &:active {
+        background: #e6f7ff;
+      }
+      
+      .iconfont {
+        margin-right: 8rpx;
+        font-size: 32rpx;
+      }
+      
+      .arrow {
+        margin-left: 8rpx;
+        font-size: 24rpx;
+        color: #999;
+      }
+    }
+  }
 }
 
-.search-box {
-  display: flex;
-  align-items: center;
-  background: #f5f7fa;
-  border-radius: 8rpx;
-  padding: 16rpx;
-  margin-bottom: 20rpx;
-}
-
-.icon-search {
-  font-size: 32rpx;
-  color: #999;
-  margin-right: 16rpx;
-}
-
-.search-input {
-  flex: 1;
-  font-size: 28rpx;
-}
-
-.filter-options {
-  display: flex;
-  gap: 20rpx;
-}
-
-.filter-item {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f5f7fa;
-  padding: 16rpx;
-  border-radius: 8rpx;
-  font-size: 28rpx;
-  color: #666;
-}
-
-.filter-item .iconfont {
-  margin-right: 8rpx;
-  font-size: 32rpx;
-}
-
-.arrow {
-  margin-left: 8rpx;
-  font-size: 24rpx;
-  color: #999;
-}
-
-/* 供应商列表样式 */
-.supplier-list {
+/* 货物列表样式 */
+.goods-list {
   height: calc(100vh - 300rpx);
+  
+  .goods-item {
+    background: #fff;
+    border-radius: 12rpx;
+    padding: 24rpx;
+    margin-bottom: 20rpx;
+    box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.05);
+    transition: all 0.3s;
+    
+    &:active {
+      transform: scale(0.98);
+    }
+    
+    .item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20rpx;
+      
+      .supplier-name {
+        font-size: 32rpx;
+        font-weight: bold;
+        color: #333;
+      }
+      
+      .status {
+        padding: 4rpx 16rpx;
+        border-radius: 4rpx;
+        font-size: 24rpx;
+        
+        &.pending {
+          background: #fff7e6;
+          color: #faad14;
+        }
+        
+        &.approved {
+          background: #f6ffed;
+          color: #52c41a;
+        }
+        
+        &.rejected {
+          background: #fff1f0;
+          color: #f5222d;
+        }
+      }
+    }
+    
+    .item-content {
+      .info-row {
+        display: flex;
+        align-items: center;
+        margin-bottom: 16rpx;
+        
+        .label {
+          font-size: 28rpx;
+          color: #666;
+          width: 160rpx;
+        }
+        
+        .value {
+          font-size: 28rpx;
+          color: #333;
+          
+          &.reject-reason {
+            color: #f5222d;
+          }
+        }
+      }
+    }
+    
+    .item-footer {
+      display: flex;
+      gap: 20rpx;
+      margin-top: 20rpx;
+      padding-top: 20rpx;
+      border-top: 2rpx solid #f0f0f0;
+      
+      .action-btn {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 64rpx;
+        border-radius: 8rpx;
+        font-size: 28rpx;
+        transition: all 0.3s;
+        
+        &.detail {
+          background: #e6f7ff;
+          color: #1890ff;
+          &:active {
+            background: darken(#e6f7ff, 5%);
+          }
+        }
+        
+        &.reject {
+          background: #fff7e6;
+          color: #faad14;
+          &:active {
+            background: darken(#fff7e6, 5%);
+          }
+        }
+        
+        &.approve {
+          background: #f6ffed;
+          color: #52c41a;
+          &:active {
+            background: darken(#f6ffed, 5%);
+          }
+        }
+      }
+    }
+  }
 }
 
-.supplier-item {
+/* 弹窗样式优化 */
+.detail-modal, .reject-modal {
+  width: 80%;
+  max-height: 80vh;
   background: #fff;
-  border-radius: 12rpx;
+  border-radius: 16rpx;
   padding: 24rpx;
-  margin-bottom: 20rpx;
-  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.05);
+  animation: modalFadeIn 0.3s;
+  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.1);
+  
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20rpx;
+    padding-bottom: 20rpx;
+    border-bottom: 2rpx solid #f0f0f0;
+    
+    .modal-title {
+      font-size: 32rpx;
+      font-weight: bold;
+      color: #333;
+      position: relative;
+      padding-left: 24rpx;
+      
+      &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 6rpx;
+        height: 28rpx;
+        background: #1890ff;
+        border-radius: 3rpx;
+      }
+    }
+    
+    .close-btn {
+      font-size: 32rpx;
+      color: #999;
+      padding: 10rpx;
+      margin: -10rpx;
+      width: 48rpx;
+      height: 48rpx;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: all 0.3s;
+      
+      &:active {
+        background: #f5f5f5;
+        color: #333;
+      }
+    }
+  }
+  
+  .modal-content {
+    max-height: calc(80vh - 180rpx);
+    overflow-y: auto;
+    
+    /* 详情弹窗内容样式 */
+    .detail-row {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 24rpx;
+      padding: 16rpx;
+      background: #fafafa;
+      border-radius: 8rpx;
+      transition: all 0.3s;
+      
+      &:hover {
+        background: #f0f7ff;
+      }
+      
+      .label {
+        font-size: 28rpx;
+        color: #666;
+        width: 160rpx;
+        padding-right: 20rpx;
+      }
+      
+      .value {
+        flex: 1;
+        font-size: 28rpx;
+        color: #333;
+        word-break: break-all;
+      }
+    }
+    
+    /* 拒绝原因输入框样式 */
+    .reject-reason {
+      width: 100%;
+      height: 320rpx;
+      padding: 24rpx;
+      background: #fafafa;
+      border: 2rpx solid #f0f0f0;
+      border-radius: 12rpx;
+      font-size: 28rpx;
+      color: #333;
+      transition: all 0.3s;
+      
+      &:focus {
+        background: #fff;
+        border-color: #1890ff;
+      }
+      
+      &::placeholder {
+        color: #999;
+      }
+    }
+  }
+  
+  .modal-footer {
+    margin-top: 32rpx;
+    display: flex;
+    justify-content: flex-end;
+    gap: 20rpx;
+    
+    .modal-btn {
+      min-width: 180rpx;
+      height: 72rpx;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8rpx;
+      font-size: 28rpx;
+      transition: all 0.3s;
+      
+      &.cancel {
+        background: #f5f5f5;
+        color: #666;
+        
+        &:active {
+          background: darken(#f5f5f5, 5%);
+        }
+      }
+      
+      &.confirm {
+        background: #1890ff;
+        color: #fff;
+        
+        &:active {
+          background: darken(#1890ff, 5%);
+        }
+      }
+    }
+  }
 }
 
-.item-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20rpx;
-}
-
-.supplier-name {
-  font-size: 32rpx;
-  font-weight: bold;
-  color: #333;
-}
-
-.supplier-code {
-  font-size: 24rpx;
-  color: #999;
-  margin-left: 16rpx;
-}
-
-.status {
-  padding: 4rpx 16rpx;
-  border-radius: 4rpx;
-  font-size: 24rpx;
-}
-
-.status.active {
-  background: #f6ffed;
-  color: #52c41a;
-}
-
-.status.pending {
-  background: #fff7e6;
-  color: #faad14;
-}
-
-.status.disabled {
-  background: #fff1f0;
-  color: #f5222d;
-}
-
-/* 信息网格样式 */
-.info-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20rpx;
-  margin-bottom: 20rpx;
-  padding: 20rpx 0;
-  border-bottom: 2rpx solid #f0f0f0;
-}
-
-.info-block {
-  text-align: center;
-}
-
-.block-label {
-  font-size: 26rpx;
-  color: #999;
-  margin-bottom: 8rpx;
-}
-
-.block-value {
-  font-size: 30rpx;
-  color: #333;
-  font-weight: 500;
-}
-
-/* 联系信息样式 */
-.contact-info {
-  padding: 20rpx 0;
-  border-bottom: 2rpx solid #f0f0f0;
-}
-
-.contact-item {
-  display: flex;
-  align-items: center;
-  margin-bottom: 16rpx;
-}
-
-.contact-item .iconfont {
-  font-size: 32rpx;
-  color: #1890ff;
-  margin-right: 12rpx;
-}
-
-.contact-item .label {
-  font-size: 28rpx;
-  color: #666;
-  width: 160rpx;
-}
-
-.contact-item .value {
-  font-size: 28rpx;
-  color: #333;
-}
-
-/* 质量信息样式 */
-.quality-info {
-  padding: 20rpx 0;
-}
-
-.quality-item {
-  display: flex;
-  align-items: center;
-  margin-bottom: 16rpx;
-}
-
-.quality-label {
-  width: 160rpx;
-  font-size: 28rpx;
-  color: #666;
-}
-
-.progress-bar {
-  flex: 1;
-  height: 20rpx;
-  background: #f5f5f5;
-  border-radius: 10rpx;
-  margin: 0 20rpx;
-  overflow: hidden;
-}
-
-.progress {
-  height: 100%;
-  transition: width 0.3s ease;
-}
-
-.progress.excellent {
-  background: #52c41a;
-}
-
-.progress.good {
-  background: #1890ff;
-}
-
-.progress.normal {
-  background: #faad14;
-}
-
-.progress.poor {
-  background: #f5222d;
-}
-
-.quality-value {
-  font-size: 28rpx;
-  color: #333;
-  width: 80rpx;
-  text-align: right;
-}
-
-/* 操作按钮样式 */
-.item-actions {
-  display: flex;
-  gap: 20rpx;
-  margin-top: 20rpx;
-  padding-top: 20rpx;
-  border-top: 2rpx solid #f0f0f0;
-}
-
-.action-btn {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 64rpx;
-  border-radius: 8rpx;
-  font-size: 28rpx;
-}
-
-.action-btn .iconfont {
-  margin-right: 8rpx;
-  font-size: 32rpx;
-}
-
-.action-btn.view {
-  background: #e6f7ff;
-  color: #1890ff;
-}
-
-.action-btn.edit {
-  background: #fff7e6;
-  color: #faad14;
-}
-
-.action-btn.history {
-  background: #f6ffed;
-  color: #52c41a;
-}
-
-/* 添加按钮样式 */
-.add-btn {
-  position: fixed;
-  right: 40rpx;
-  bottom: 40rpx;
-  width: 100rpx;
-  height: 100rpx;
-  background: #1890ff;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4rpx 12rpx rgba(24,144,255,0.3);
-}
-
-.add-btn .icon-add {
-  color: #fff;
-  font-size: 48rpx;
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 </style>
 
@@ -581,42 +576,151 @@ export default {
       
       // 搜索和筛选
       searchKey: '',
-      statusOptions: ['全部', '正常', '待审核', '已禁用'],
-      categoryOptions: ['全部', '面粉', '食用油', '调味品', '其他'],
+      auditStatus: ['全部', '待审核', '已通过', '已拒绝'],
       selectedStatus: 0,
-      selectedCategory: 0,
       
-      // 数据列表
-      dataList: [],
-      loading: false,
+      // 列表数据
+      goodsList: [],
       refreshing: false,
-      hasMore: true,
-      page: 1,
       
-      // 编辑相关
-      editingItem: null,
-      formData: {
-        supplierName: '',
-        productName: '',
-        quantity: '',
-        price: ''
-      },
+      // 当前选中项
+      selectedItem: null,
       
-      // 删除相关
-      deletingItem: null
+      // 拒绝原因
+      rejectReason: ''
     }
   },
   
+  mounted() {
+    this.loadData()
+    this.loadStats()
+  },
+  
   methods: {
-    // 获取质量等级样式
-    getQualityClass(rate) {
-      if (rate >= 90) return 'excellent'
-      if (rate >= 80) return 'good'
-      if (rate >= 60) return 'normal'
-      return 'poor'
+    // 加载数据
+    async loadData() {
+      try {
+        const params = {
+          keyword: this.searchKey,
+          status: ['all', 'pending', 'approved', 'rejected'][this.selectedStatus]
+        }
+        const res = await this.$api.admin.getSupplierGoods(params)
+        this.goodsList = res.data.list
+      } catch(e) {
+        console.error(e)
+        uni.showToast({
+          title: '加载失败',
+          icon: 'none'
+        })
+      }
     },
     
-    // ... 其他方法实现
+    // 加载统计数据
+    async loadStats() {
+      try {
+        const res = await this.$api.admin.getSupplierStats()
+        this.stats = res.data
+      } catch(e) {
+        console.error(e)
+      }
+    },
+    
+    // 搜索
+    onSearch() {
+      this.resetList()
+      this.loadData()
+    },
+    
+    // 状态筛选
+    onStatusChange(e) {
+      this.selectedStatus = e.detail.value
+      this.resetList()
+      this.loadData()
+    },
+    
+    // 重置列表
+    resetList() {
+      this.goodsList = []
+    },
+    
+    // 查看详情
+    viewDetail(item) {
+      this.selectedItem = item
+      this.$refs.detailPopup.open()
+    },
+    
+    closeDetailPopup() {
+      this.$refs.detailPopup.close()
+      this.selectedItem = null
+    },
+    
+    // 拒绝相关
+    showRejectModal(item) {
+      this.selectedItem = item
+      this.rejectReason = ''
+      this.$refs.rejectPopup.open()
+    },
+    
+    closeRejectPopup() {
+      this.$refs.rejectPopup.close()
+      this.selectedItem = null
+      this.rejectReason = ''
+    },
+    
+    async rejectGoods() {
+      if (!this.rejectReason) {
+        uni.showToast({
+          title: '请输入拒绝原因',
+          icon: 'none'
+        })
+        return
+      }
+      
+      try {
+        await this.$api.admin.rejectSupplierGoods({
+          id: this.selectedItem.id,
+          rejectReason: this.rejectReason
+        })
+        
+        uni.showToast({
+          title: '已拒绝'
+        })
+        this.closeRejectPopup()
+        this.loadData()
+      } catch(e) {
+        uni.showToast({
+          title: '操作失败',
+          icon: 'none'
+        })
+      }
+    },
+    
+    // 通过审核
+    async approveGoods(item) {
+      try {
+        await this.$api.admin.approveSupplierGoods(item.id)
+        uni.showToast({
+          title: '已通过'
+        })
+        this.loadData()
+      } catch(e) {
+        uni.showToast({
+          title: '操作失败',
+          icon: 'none'
+        })
+      }
+    },
+    
+    // 下拉刷新和加载更多
+    async refresh() {
+      this.refreshing = true
+      await this.loadData()
+      this.refreshing = false
+    },
+    
+    loadMore() {
+      // TODO: 实现分页加载
+    }
   }
 }
 </script> 

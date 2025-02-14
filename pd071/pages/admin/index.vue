@@ -22,19 +22,6 @@
       </view>
     </view>
 
-    <!-- 数据概览 -->
-    <view class="data-overview">
-      <view class="section-title">
-        <text>数据概览</text>
-        <text class="more" @tap="navigateTo('/pages/admin/statistics')">查看更多</text>
-      </view>
-      
-      <!-- 图表区域 -->
-      <view class="charts">
-        <!-- 待接入图表组件 -->
-      </view>
-    </view>
-
     <!-- 待处理事项 -->
     <view class="pending-tasks">
       <view class="section-title">
@@ -78,7 +65,7 @@ export default {
         { name: '品控管理', icon: '✅', path: '/pages/admin/quality/index' },
         { name: '仓库管理', icon: '📦', path: '/pages/admin/warehouse/index' },
         { name: '用户管理', icon: '👥', path: '/pages/admin/users/index' },
-        { name: '系统设置', icon: '⚙️', path: '/pages/admin/settings/index' }
+        { name: '数据统计', icon: '📊', path: '/pages/admin/statistics/index' }
       ],
       
       // 待处理任务
@@ -200,14 +187,6 @@ export default {
   font-size: 24rpx;
   padding: 4rpx 12rpx;
   border-radius: 20rpx;
-}
-
-/* 数据概览 */
-.data-overview {
-  background: #fff;
-  border-radius: 12rpx;
-  padding: 20rpx;
-  margin-bottom: 30rpx;
 }
 
 /* 待处理事项 */

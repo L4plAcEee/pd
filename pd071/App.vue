@@ -1,9 +1,16 @@
 <script>
 	import { logger } from '@/utils/logger'
+	import userApi from '@/api/user.js'
 	
 	export default {
 		onLaunch: function() {
 			console.log('App Launch')
+			// 设置默认用户信息
+			if(!uni.getStorageSync('userInfo')) {
+				uni.setStorageSync('userInfo', JSON.stringify(userApi.mockUserInfo))
+				uni.setStorageSync('token', 'mock_token_123456')
+			}
+			
 			// 设置全局错误处理
 			const _this = this
 			uni.onError(function(err) {
@@ -43,6 +50,8 @@
 </script>
 
 <style>
+	@import './static/iconfont.css';
+
 	/*每个页面公共css */
 	page {
 		background-color: #f5f5f5;

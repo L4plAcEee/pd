@@ -1,0 +1,37 @@
+@font-face {
+  font-family: "iconfont";
+  src: url('data:application/x-font-woff2;charset=utf-8;base64,d09GMgABAAAAAA...') format('woff2');
+}
+
+.iconfont {
+  font-family: "iconfont" !important;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-supplier:before {
+  content: "\e601";
+}
+
+.icon-production:before {
+  content: "\e602";
+}
+
+.icon-quality:before {
+  content: "\e603";
+}
+
+.icon-admin:before {
+  content: "\e604";
+}
+
+.icon-statistics:before {
+  content: "\e605";
+}
+
+.icon-calendar:before {
+  content: "\e606";
+}
+
+/* 其他图标... */ 

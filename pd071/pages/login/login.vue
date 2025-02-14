@@ -75,6 +75,8 @@
 </template>
 
 <script>
+import userApi from '@/api/user.js'
+
 export default {
   data() {
     return {
@@ -98,6 +100,14 @@ export default {
     if(cachedPhone) {
       this.phone = cachedPhone
       this.validatePhone()
+    }
+
+    // 检查是否已登录
+    const token = uni.getStorageSync('token')
+    if(token) {
+      uni.switchTab({
+        url: '/pages/index/index'
+      })
     }
   },
   methods: {
@@ -159,7 +169,12 @@ export default {
         uni.setStorageSync('lastPhone', this.phone)
         this.failCount = 0
         uni.hideLoading()
-        uni.reLaunch({
+
+        // 使用模拟数据
+        uni.setStorageSync('userInfo', JSON.stringify(userApi.mockUserInfo))
+        uni.setStorageSync('token', 'mock_token_123456')
+
+        uni.switchTab({
           url: '/pages/index/index'
         })
       } catch(e) {

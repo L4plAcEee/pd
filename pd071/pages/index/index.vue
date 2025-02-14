@@ -1,50 +1,43 @@
 <template>
 	<view class="container">
-		<!-- Logo和欢迎语 -->
+		<!-- 顶部欢迎语 -->
 		<view class="welcome">
-			<image class="logo" src="/static/logo.png" mode="aspectFit"></image>
 			<text class="title">欢迎使用平德管理系统</text>
+			<text class="subtitle">请选择您要进入的模块</text>
 		</view>
-
-		<!-- 身份选择区域 -->
-		<view class="role-section">
-			<text class="section-title">请选择您的身份</text>
-			<view class="role-grid">
-				<!-- 供应商入口 -->
-				<view 
-					class="role-item"
-					@tap="navigateTo('/pages/supplier/index')"
-				>
-					<image class="role-icon" src="/static/supplier.png" mode="aspectFit"></image>
-					<text class="role-name">供应商门户</text>
+		
+		<!-- 模块导航 -->
+		<view class="nav-grid">
+			<!-- 供应商门户 -->
+			<view class="nav-item" @tap="navTo('/pages/supplier/index')">
+				<view class="icon-wrapper supplier">
+					<image src="/static/supplier.png" mode="aspectFit"></image>
 				</view>
-
-				<!-- 生产部门入口 -->
-				<view 
-					class="role-item"
-					@tap="navigateTo('/pages/production/index')"
-				>
-					<image class="role-icon" src="/static/production.png" mode="aspectFit"></image>
-					<text class="role-name">生产部门</text>
+				<text class="label">供应商门户</text>
+			</view>
+			
+			<!-- 生产部门 -->
+			<view class="nav-item" @tap="navTo('/pages/production/index')">
+				<view class="icon-wrapper production">
+					<image src="/static/production.png" mode="aspectFit"></image>
 				</view>
-
-				<!-- 品控部门入口 -->
-				<view 
-					class="role-item"
-					@tap="navigateTo('/pages/quality/index')"
-				>
-					<image class="role-icon" src="/static/quality.png" mode="aspectFit"></image>
-					<text class="role-name">品控部门</text>
+				<text class="label">生产部门</text>
+			</view>
+			
+			<!-- 品控部门 -->
+			<view class="nav-item" @tap="navTo('/pages/quality/index')">
+				<view class="icon-wrapper quality">
+					<image src="/static/quality.png" mode="aspectFit"></image>
 				</view>
-
-				<!-- 管理后台入口 -->
-				<view 
-					class="role-item"
-					@tap="navigateTo('/pages/admin/index')"
-				>
-					<image class="role-icon" src="/static/admin.png" mode="aspectFit"></image>
-					<text class="role-name">管理后台</text>
+				<text class="label">品控部门</text>
+			</view>
+			
+			<!-- 管理后台 -->
+			<view class="nav-item" @tap="navTo('/pages/admin/index')">
+				<view class="icon-wrapper admin">
+					<image src="/static/admin.png" mode="aspectFit"></image>
 				</view>
+				<text class="label">管理后台</text>
 			</view>
 		</view>
 	</view>
@@ -53,92 +46,101 @@
 <script>
 	export default {
 		data() {
-			return {
-				title: '平德管理系统'
-			}
+			return {}
 		},
 		onLoad() {
 
 		},
 		methods: {
-			navigateTo(url) {
+			navTo(url) {
 				uni.navigateTo({
-					url: url
+					url
 				})
 			}
 		}
 	}
 </script>
 
-<style>
+<style lang="scss">
 	.container {
-		padding: 40rpx;
 		min-height: 100vh;
-		background: #f5f5f5;
+		padding: 40rpx;
+		background: #f5f7fa;
 	}
 
-	/* 欢迎区域 */
 	.welcome {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
 		margin-bottom: 60rpx;
+		
+		.title {
+			display: block;
+			font-size: 40rpx;
+			font-weight: bold;
+			color: #333;
+			margin-bottom: 16rpx;
+		}
+		
+		.subtitle {
+			font-size: 28rpx;
+			color: #666;
+		}
 	}
 
-	.logo {
-		width: 200rpx;
-		height: 200rpx;
-		margin-bottom: 20rpx;
-	}
-
-	.title {
-		font-size: 36rpx;
-		color: #333;
-		font-weight: bold;
-	}
-
-	/* 身份选择区域 */
-	.role-section {
-		background: #fff;
-		border-radius: 12rpx;
-		padding: 30rpx;
-	}
-
-	.section-title {
-		font-size: 32rpx;
-		color: #333;
-		margin-bottom: 30rpx;
-		display: block;
-	}
-
-	.role-grid {
+	.nav-grid {
 		display: grid;
 		grid-template-columns: repeat(2, 1fr);
 		gap: 30rpx;
-	}
-
-	.role-item {
-		background: #f8f8f8;
-		border-radius: 12rpx;
-		padding: 40rpx 20rpx;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		transition: all 0.3s;
-	}
-
-	.role-item:active {
-		background: #f0f0f0;
-	}
-
-	.role-icon {
-		width: 100rpx;
-		height: 100rpx;
-		margin-bottom: 20rpx;
-	}
-
-	.role-name {
-		font-size: 28rpx;
-		color: #333;
+		padding: 20rpx 0;
+		
+		.nav-item {
+			background: #fff;
+			border-radius: 16rpx;
+			padding: 40rpx 20rpx;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.05);
+			transition: all 0.3s;
+			
+			&:active {
+				transform: scale(0.95);
+			}
+			
+			.icon-wrapper {
+				width: 120rpx;
+				height: 120rpx;
+				border-radius: 50%;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				margin-bottom: 20rpx;
+				
+				image {
+					width: 60%;
+					height: 60%;
+				}
+				
+				&.supplier {
+					background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+				}
+				
+				&.production {
+					background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
+				}
+				
+				&.quality {
+					background: linear-gradient(135deg, #faad14 0%, #d48806 100%);
+				}
+				
+				&.admin {
+					background: linear-gradient(135deg, #722ed1 0%, #531dab 100%);
+				}
+			}
+			
+			.label {
+				font-size: 32rpx;
+				color: #333;
+				font-weight: 500;
+			}
+		}
 	}
 </style>
