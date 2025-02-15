@@ -125,16 +125,14 @@
           </view>
         </view>
         <view class="chart-content">
-          <view class="chart-simple">
-            <view 
-              class="chart-item" 
-              v-for="(item, index) in chartData.production.series" 
-              :key="index"
-            >
-              <text class="item-name">{{item.name}}</text>
-              <text class="item-value">{{item.data[item.data.length-1]}}</text>
-            </view>
-          </view>
+          <u-line-chart
+            :points="productionData"
+            :tooltipOpts="tooltipOpts"
+            :xAxis="xAxisOpts"
+            :yAxis="yAxisOpts"
+            :legend="legendOpts"
+            height="400"
+          />
         </view>
       </view>
       
@@ -147,16 +145,14 @@
           </view>
         </view>
         <view class="chart-content">
-          <view class="chart-simple">
-            <view 
-              class="chart-item" 
-              v-for="(item, index) in chartData.quality.series" 
-              :key="index"
-            >
-              <text class="item-name">{{item.name}}</text>
-              <text class="item-value">{{item.data[0]}}</text>
-            </view>
-          </view>
+          <u-line-chart
+            :points="qualityData"
+            :tooltipOpts="tooltipOpts"
+            :xAxis="xAxisOpts"
+            :yAxis="yAxisOpts"
+            :legend="legendOpts"
+            height="400"
+          />
         </view>
       </view>
     </view>
@@ -197,53 +193,77 @@ export default {
       // 数据概览
       overview: {
         supplier: {
-          total: 0,        // 供应商总数
-          new: 0,          // 本月新增供应商
-          amount: 0,       // 本月采购金额
-          orders: 0,       // 本月采购订单数
-          returns: 0       // 本月退货数
+          total: 0,
+          new: 0,
+          amount: 0,
+          orders: 0,
+          returns: 0
         },
         production: {
-          batches: 0,      // 生产批次
-          quantity: 0,     // 生产数量(吨)
-          passRate: 0,     // 合格率
-          efficiency: 0,   // 生产效率
-          waste: 0,        // 废品率
-          cost: 0          // 生产成本
+          batches: 0,
+          quantity: 0,
+          passRate: 0,
+          efficiency: 0,
+          waste: 0,
+          cost: 0
         },
         quality: {
-          batches: 0,      // 检验批次
-          passed: 0,       // 合格批次
-          failed: 0,       // 不合格批次
-          rate: 0,         // 一次合格率
-          avgTime: 0,      // 平均检验时长
-          issues: ['水分超标', '杂质超标']  // 主要问题类型
+          batches: 0,
+          passed: 0,
+          failed: 0,
+          rate: 0,
+          avgTime: 0,
+          issues: []  // 初始化为空数组
         },
         warehouse: {
-          total: 0,        // 库存总量
-          types: 0,        // 产品类型数
-          warning: 0,      // 预警数量
-          turnover: 0,     // 周转率
-          value: 0,        // 库存价值
-          space: 0         // 仓储利用率
+          total: 0,
+          types: 0,
+          warning: 0,
+          turnover: 0,
+          value: 0,
+          space: 0
         }
       },
       
       // 图表数据
-      chartData: {
-        production: {
-          categories: [],
-          series: []
-        },
-        quality: {
-          categories: [],
-          series: []
-        }
+      productionData: [],
+      qualityData: [],
+      
+      // 图表配置
+      tooltipOpts: {
+        showTooltip: true,
+        tooltipFontSize: 12,
+        tooltipPadding: 8,
+        tooltipBgColor: '#000000',
+        tooltipBgOpacity: 0.7
+      },
+      xAxisOpts: {
+        show: true,
+        fontSize: 12,
+        color: '#666666',
+        rotateLabel: true
+      },
+      yAxisOpts: {
+        show: true,
+        fontSize: 12,
+        color: '#666666',
+        min: 0,
+        gridType: 'dash',
+        gridColor: '#CCCCCC',
+        splitNumber: 5
+      },
+      legendOpts: {
+        show: true,
+        position: 'top',
+        float: 'right',
+        itemGap: 10,
+        fontSize: 12,
+        padding: [10, 10]
       }
     }
   },
   
-  mounted() {
+  onLoad() {
     this.initData()
   },
   
@@ -252,24 +272,38 @@ export default {
     async initData() {
       const date = new Date()
       this.selectedDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-      await this.loadData()
+      try {
+        await this.loadData()
+      } catch(e) {
+        console.error('初始化数据失败:', e)
+        uni.showToast({
+          title: '加载失败',
+          icon: 'none'
+        })
+      }
     },
     
     // 加载数据
     async loadData() {
       try {
+        uni.showLoading({
+          title: '加载中...'
+        })
         const res = await api.statistics.getStatisticsData({
           date: this.selectedDate
         })
-        this.overview = res.data.overview
-        // 更新图表数据
-        this.updateCharts(res.data.charts)
+        if(res && res.data) {
+          this.overview = res.data.overview
+          this.updateCharts(res.data.charts)
+        }
       } catch(e) {
         console.error(e)
         uni.showToast({
           title: '加载失败',
           icon: 'none'
         })
+      } finally {
+        uni.hideLoading()
       }
     },
     
@@ -311,35 +345,52 @@ export default {
     
     // 更新图表数据
     updateCharts(data) {
-      // 更新图表数据
-      this.chartData.production = {
-        categories: data.production.dates,
-        series: [
+      if(!data) return
+      
+      // 更新生产趋势图数据
+      if(data.production) {
+        this.productionData = [
           {
             name: '生产数量(吨)',
-            data: data.production.quantities
+            color: '#1890ff',
+            points: (data.production.dates || []).map((date, index) => ({
+              x: date,
+              y: data.production.quantities[index] || 0
+            }))
           },
           {
             name: '生产批次',
-            data: data.production.batches
+            color: '#52c41a',
+            points: (data.production.dates || []).map((date, index) => ({
+              x: date,
+              y: data.production.batches[index] || 0
+            }))
           }
         ]
       }
       
-      this.chartData.quality = {
-        categories: data.quality.departments,
-        series: [
+      // 更新品控趋势图数据
+      if(data.quality) {
+        this.qualityData = [
           {
             name: '合格批次',
-            data: data.quality.passed
+            color: '#52c41a',
+            points: (data.quality.departments || []).map((dept, index) => ({
+              x: dept,
+              y: data.quality.passed[index] || 0
+            }))
           },
           {
             name: '不合格批次',
-            data: data.quality.failed
+            color: '#ff4d4f',
+            points: (data.quality.departments || []).map((dept, index) => ({
+              x: dept,
+              y: data.quality.failed[index] || 0
+            }))
           }
         ]
       }
-    }
+    },
   }
 }
 </script>
@@ -481,7 +532,7 @@ export default {
     
     .chart-content {
       height: 400rpx;
-      // TODO: 图表样式
+      width: 100%;
     }
   }
 }
@@ -549,28 +600,8 @@ export default {
   }
 }
 
-/* 简单图表样式 */
+/* 移除旧的简单图表样式 */
 .chart-simple {
-  padding: 20rpx;
-  display: flex;
-  justify-content: space-around;
-  
-  .chart-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    
-    .item-name {
-      font-size: 24rpx;
-      color: #666;
-      margin-bottom: 10rpx;
-    }
-    
-    .item-value {
-      font-size: 32rpx;
-      color: #333;
-      font-weight: bold;
-    }
-  }
+  display: none;
 }
 </style> 

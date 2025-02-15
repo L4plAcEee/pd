@@ -569,21 +569,25 @@ export default {
     return {
       // 统计数据
       stats: {
-        total: 128,
-        active: 86,
-        pending: 5
+        total: 0,
+        active: 0,
+        pending: 0
       },
       
-      // 搜索和筛选
+      // 搜索关键词
       searchKey: '',
+      
+      // 审核状态选项
       auditStatus: ['全部', '待审核', '已通过', '已拒绝'],
       selectedStatus: 0,
       
-      // 列表数据
+      // 商品列表
       goodsList: [],
+      
+      // 刷新状态
       refreshing: false,
       
-      // 当前选中项
+      // 选中的商品
       selectedItem: null,
       
       // 拒绝原因
@@ -591,9 +595,19 @@ export default {
     }
   },
   
-  mounted() {
-    this.loadData()
-    this.loadStats()
+  async onLoad() {
+    try {
+      // 获取供应商统计数据
+      const statsData = await this.$api.admin.getSupplierStats()
+      if (statsData) {
+        this.stats = statsData
+      }
+      
+      // 加载商品列表
+      await this.loadData()
+    } catch (error) {
+      console.error('加载数据失败:', error)
+    }
   },
   
   methods: {
@@ -602,26 +616,18 @@ export default {
       try {
         const params = {
           keyword: this.searchKey,
-          status: ['all', 'pending', 'approved', 'rejected'][this.selectedStatus]
+          status: this.selectedStatus
         }
-        const res = await this.$api.admin.getSupplierGoods(params)
-        this.goodsList = res.data.list
-      } catch(e) {
-        console.error(e)
+        const result = await this.$api.admin.getSupplierGoods(params)
+        if (result && result.list) {
+          this.goodsList = result.list
+        }
+      } catch (error) {
+        console.error('加载列表失败:', error)
         uni.showToast({
           title: '加载失败',
           icon: 'none'
         })
-      }
-    },
-    
-    // 加载统计数据
-    async loadStats() {
-      try {
-        const res = await this.$api.admin.getSupplierStats()
-        this.stats = res.data
-      } catch(e) {
-        console.error(e)
       }
     },
     

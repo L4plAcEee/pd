@@ -70,37 +70,93 @@
 export default {
   data() {
     return {
-      status: '正常运行',
-      pendingList: [
-        {
-          orderId: 'QC20231201001',
-          time: '2023-12-01 10:30',
-          productName: '精磨面粉',
-          quantity: 1000,
-          unit: 'kg',
-          source: '磨房车间'
-        }
-      ],
-      historyList: [
-        {
-          orderId: 'QC20231130001',
-          productName: '特制面粉',
-          time: '2023-11-30 15:20',
-          status: 'pass',
-          statusText: '通过'
-        },
-        {
-          orderId: 'QC20231130002',
-          productName: '标准面粉',
-          time: '2023-11-30 14:10',
-          status: 'reject',
-          statusText: '退回'
-        }
-      ]
+      status: '',
+      pendingList: [],
+      historyList: [],
+      stats: {
+        total: 0,
+        pending: 0,
+        passed: 0,
+        failed: 0
+      },
+      
+      inspectionList: [],
+      
+      refreshing: false
+    }
+  },
+  
+  async onLoad() {
+    try {
+      // 获取运行状态
+      const statusData = await this.$api.quality.getSystemStatus()
+      if (statusData) {
+        this.status = statusData.status || '正常运行'
+      }
+      
+      // 获取品控统计数据
+      const statsData = await this.$api.quality.getQualityStats()
+      if (statsData) {
+        this.stats = statsData
+      }
+      
+      // 加载待检验列表和历史记录
+      await Promise.all([
+        this.loadPendingList(),
+        this.loadHistoryList()
+      ])
+    } catch (error) {
+      console.error('加载数据失败:', error)
     }
   },
   
   methods: {
+    // 加载待检验列表
+    async loadPendingList() {
+      try {
+        const result = await this.$api.quality.getInspectionList()
+        if (result && result.list) {
+          this.pendingList = result.list
+        }
+      } catch (error) {
+        console.error('加载列表失败:', error)
+        uni.showToast({
+          title: '加载失败',
+          icon: 'none'
+        })
+      }
+    },
+    
+    // 加载历史记录
+    async loadHistoryList() {
+      try {
+        const result = await this.$api.quality.getHistoryList()
+        if (result && result.list) {
+          this.historyList = result.list
+        }
+      } catch (error) {
+        console.error('加载历史记录失败:', error)
+      }
+    },
+    
+    // 查看详情
+    viewDetail(item) {
+      uni.navigateTo({
+        url: `/pages/quality/inspection?id=${item.id}`
+      })
+    },
+    
+    // 下拉刷新
+    async refresh() {
+      this.refreshing = true
+      try {
+        await this.onLoad()
+      } catch (error) {
+        console.error('刷新失败:', error)
+      }
+      this.refreshing = false
+    },
+
     handleInspection(item) {
       uni.navigateTo({
         url: './inspection?id=' + item.orderId

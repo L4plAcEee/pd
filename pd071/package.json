@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "@dcloudio/uni-ui": "^1.4.27"
+    "@dcloudio/uni-ui": "^1.4.27",
+    "@qiun/ucharts": "^2.5.0-20230101"
   }
 }

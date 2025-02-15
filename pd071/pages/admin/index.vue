@@ -53,9 +53,9 @@ export default {
     return {
       // 统计数据
       stats: [
-        { label: '今日订单', value: 128 },
-        { label: '待审核', value: 15 },
-        { label: '库存预警', value: 3 }
+        { label: '今日订单', value: 0 },
+        { label: '待审核', value: 0 },
+        { label: '库存预警', value: 0 }
       ],
       
       // 功能模块
@@ -69,24 +69,38 @@ export default {
       ],
       
       // 待处理任务
-      pendingTasks: [
-        {
-          type: 'quality',
-          typeText: '品控',
-          title: '新增5个待检验订单',
-          time: '10分钟前'
-        },
-        {
-          type: 'warehouse',
-          typeText: '仓库',
-          title: '3个产品库存不足',
-          time: '30分钟前'
-        }
-      ]
+      pendingTasks: []
     }
   },
   
+  onLoad() {
+    this.initData()
+  },
+  
   methods: {
+    // 初始化数据
+    async initData() {
+      try {
+        // 获取仪表盘数据
+        const dashboardData = await this.$api.admin.getDashboardData()
+        if (dashboardData) {
+          this.stats = [
+            { label: '今日订单', value: dashboardData.todayOrders || 0 },
+            { label: '待审核', value: dashboardData.pendingReviews || 0 },
+            { label: '库存预警', value: dashboardData.storageWarnings || 0 }
+          ]
+        }
+        
+        // 获取待处理事项
+        const tasks = await this.$api.admin.getPendingTasks()
+        if (tasks) {
+          this.pendingTasks = tasks
+        }
+      } catch (error) {
+        console.error('加载数据失败:', error)
+      }
+    },
+
     // 页面导航
     navigateTo(path) {
       // 判断是否是 tabBar 页面
@@ -106,7 +120,7 @@ export default {
         warehouse: '/pages/admin/warehouse/index'
       }
       
-      if(pathMap[task.type]) {
+      if (pathMap[task.type]) {
         this.navigateTo(pathMap[task.type])
       }
     }

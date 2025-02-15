@@ -219,16 +219,16 @@ export default {
     return {
       // 状态切换
       tabs: [
-        { name: '待品控', badge: 5 },
+        { name: '待品控', badge: 0 },
         { name: '已品控', badge: 0 }
       ],
       activeTab: 0,
       
       // 搜索和筛选
       searchKey: '',
-      departments: ['全部', '磨房一部', '磨房二部'],
-      selectedDepartment: 0,
-      qualityStatus: ['全部', '待检验', '已合格', '不合格'],
+      departments: ['全部', '磨房一部', '磨房二部', '包装部'],
+      selectedDept: 0,
+      qualityStatus: ['全部', '待检验', '合格', '不合格'],
       selectedStatus: 0,
       
       // 数据列表
@@ -262,9 +262,21 @@ export default {
     }
   },
   
-  mounted() {
-    this.loadData()
-    this.loadStats()
+  async onLoad() {
+    try {
+      // 获取品控统计数据
+      const statsData = await this.$api.admin.getQualityStats()
+      if (statsData) {
+        this.stats = statsData
+        // 更新待品控标签数量
+        this.tabs[0].badge = statsData.pending || 0
+      }
+      
+      // 加载列表数据
+      await this.loadData()
+    } catch (error) {
+      console.error('加载数据失败:', error)
+    }
   },
   
   methods: {
@@ -321,7 +333,7 @@ export default {
     },
 
     onDepartmentChange(e) {
-      this.selectedDepartment = e.detail.value
+      this.selectedDept = e.detail.value
       this.resetList()
       this.loadData()
     },
@@ -404,22 +416,12 @@ export default {
       }
     },
 
-    // 加载统计数据
-    async loadStats() {
-      try {
-        const res = await this.$api.admin.getQualityStats()
-        this.stats = res.data
-      } catch(e) {
-        console.error(e)
-      }
-    },
-
     // 加载列表数据
     async loadData() {
       try {
         const params = {
           keyword: this.searchKey,
-          department: this.departments[this.selectedDepartment],
+          department: this.departments[this.selectedDept],
           status: ['all', 'pending', 'passed', 'failed'][this.selectedStatus]
         }
         const res = await this.$api.admin.getQualityList(params)
@@ -446,7 +448,11 @@ export default {
     // 下拉刷新和加载更多
     async refresh() {
       this.refreshing = true
-      await this.loadData()
+      try {
+        await this.onLoad()
+      } catch (error) {
+        console.error('刷新失败:', error)
+      }
       this.refreshing = false
     },
 

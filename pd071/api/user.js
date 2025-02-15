@@ -1,12 +1,46 @@
+import { request } from '@/utils/request'
+
 export default {
-  // 模拟用户数据
-  mockUserInfo: {
-    avatarUrl: '/static/user-active.png',
-    nickname: '张三',
-    realName: '张三',
-    phone: '13800138000',
-    company: '平德面粉厂',
-    department: '品控部',
-    role: 'admin'  // 角色：admin-管理员
+  // 登录
+  login(data) {
+    return request({
+      url: '/api/user/login',
+      method: 'POST',
+      data
+    })
+  },
+
+  // 获取验证码
+  getVerifyCode(phone) {
+    return request({
+      url: '/api/user/verify-code',
+      method: 'POST',
+      data: { phone }
+    })
+  },
+
+  // 获取用户信息
+  getUserInfo() {
+    return request({
+      url: '/api/user/info',
+      method: 'GET'
+    })
+  },
+
+  // 更新用户信息
+  updateUserInfo(data) {
+    return request({
+      url: '/api/user/info',
+      method: 'PUT',
+      data
+    })
+  },
+
+  // 退出登录
+  logout() {
+    return request({
+      url: '/api/user/logout',
+      method: 'POST'
+    })
   }
 } 
