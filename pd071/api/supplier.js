@@ -1,102 +1,110 @@
-import { loading } from '@/utils/loading'
+import { request } from '@/utils/request'
 
 // 供应商API
 export default {
   // 提交原料订单
   submitOrder(data) {
-    return new Promise((resolve) => {
-      loading.show('提交订单...')
-      setTimeout(() => {
-        resolve({
-          success: true,
-          data: {
-            id: Date.now(),
-            ...data
-          }
-        })
-        loading.hide()
-      }, 500)
+    return request({
+      url: '/api/supplier/order/submit',
+      method: 'POST',
+      data
     })
   },
 
   // 获取历史订单
   getHistory(params = {}) {
-    return new Promise((resolve) => {
-      loading.show('加载历史记录...')
-      setTimeout(() => {
-        resolve({
-          data: {
-            total: 30,
-            list: [
-              {
-                id: '1',
-                productName: '原料A',
-                quantity: 500,
-                price: 12.5,
-                totalAmount: 6250,
-                createTime: '2024-01-15 14:20:00',
-                status: 'finished'
-              }
-            ]
-          }
-        })
-        loading.hide()
-      }, 500)
+    return request({
+      url: '/api/supplier/order/history',
+      method: 'GET',
+      data: params
     })
   },
 
   // 获取价格参考
   getPriceReference(productName) {
-    return new Promise((resolve) => {
-      loading.show('获取价格参考...')
-      setTimeout(() => {
-        resolve({
-          data: {
-            avgPrice: 12.8,    // 历史均价
-            lastPrice: 12.5,   // 上次价格
-            minPrice: 10.0     // 最低限价
-          }
-        })
-        loading.hide()
-      }, 500)
+    return request({
+      url: '/api/supplier/price/reference',
+      method: 'GET',
+      data: { productName }
     })
   },
   
   // 获取产品信息（扫码）
   getProductByCode(code) {
-    return new Promise((resolve) => {
-      loading.show('获取产品信息...')
-      setTimeout(() => {
-        resolve({
-          data: {
-            name: '示例产品',
-            suggestedPrice: 12.5,
-            avgPrice: 12.8,
-            lastPrice: 12.5,
-            minPrice: 10.0
-          }
-        })
-        loading.hide()
-      }, 500)
+    return request({
+      url: '/api/supplier/product/scan',
+      method: 'GET',
+      data: { code }
     })
   },
   
   // 获取供应商列表
-  getSupplierList() {
-    return new Promise((resolve) => {
-      loading.show('加载供应商列表...')
-      setTimeout(() => {
-        resolve({
-          data: {
-            list: [
-              { name: '供应商A', code: 'SUP001' },
-              { name: '供应商B', code: 'SUP002' },
-              { name: '供应商C', code: 'SUP003' }
-            ]
-          }
-        })
-        loading.hide()
-      }, 500)
+  getSupplierList(params = {}) {
+    return request({
+      url: '/api/supplier/list',
+      method: 'GET',
+      data: params
+    })
+  },
+
+  // 添加供应商
+  addSupplier(data) {
+    return request({
+      url: '/api/supplier/add',
+      method: 'POST',
+      data
+    })
+  },
+
+  // 更新供应商信息
+  updateSupplier(data) {
+    return request({
+      url: '/api/supplier/update',
+      method: 'PUT',
+      data
+    })
+  },
+
+  // 获取供应商详情
+  getSupplierDetail(id) {
+    return request({
+      url: `/api/supplier/${id}`,
+      method: 'GET'
+    })
+  },
+
+  // 获取供应商统计数据
+  getSupplierStats() {
+    return request({
+      url: '/api/supplier/stats',
+      method: 'GET'
+    })
+  },
+
+  // 获取供应商订单列表
+  getOrderList(params = {}) {
+    return request({
+      url: '/api/supplier/orders',
+      method: 'GET',
+      data: params
+    })
+  },
+
+  // 提交供货申请
+  submitSupply(data) {
+    return request({
+      url: '/api/supplier/supply',
+      method: 'POST',
+      data
+    })
+  },
+
+  // 获取结算记录
+  getSettlementList(params = {}) {
+    return request({
+      url: '/api/supplier/settlements',
+      method: 'GET',
+      data: params
     })
   }
 } 
