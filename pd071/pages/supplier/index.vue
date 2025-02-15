@@ -1,93 +1,147 @@
 <template>
   <view class="supplier-container">
-    <!-- 头部功能区 -->
-    <view class="header">
-      <!-- 扫码按钮 -->
-      <view class="scan-btn" @tap="handleScan">
-        <text class="scan-icon">📷</text>
-      </view>
-      
-      <!-- 今日统计 -->
-      <view class="stats-card">
-        <view class="stats-item">
-          <text class="stats-label">今日提交</text>
-          <text class="stats-value">{{todayStats.count}}单</text>
+    <!-- 添加下拉刷新 -->
+    <scroll-view 
+      scroll-y 
+      refresher-enabled
+      :refresher-triggered="refreshing"
+      @refresherrefresh="onRefresh"
+      class="scroll-container"
+    >
+      <!-- 头部功能区 -->
+      <view class="header">
+        <!-- 扫码按钮 -->
+        <view class="scan-btn" @tap="handleScan">
+          <text class="scan-icon">📷</text>
         </view>
-        <view class="stats-item">
-          <text class="stats-label">总金额</text>
-          <text class="stats-value">￥{{formatPrice(todayStats.amount)}}</text>
+        
+        <!-- 今日统计 -->
+        <view class="stats-card">
+          <view class="stats-item">
+            <text class="stats-label">今日提交</text>
+            <text class="stats-value">{{todayStats.count}}单</text>
+          </view>
+          <view class="stats-item">
+            <text class="stats-label">总金额</text>
+            <text class="stats-value">￥{{formatPrice(todayStats.amount)}}</text>
+          </view>
         </view>
       </view>
-    </view>
 
-    <!-- 主体表单区 -->
-    <view class="form-section">
-      <!-- 产品名称 -->
-      <view class="form-item">
-        <text class="label"><text class="required">*</text>产品名称</text>
-        <view class="input-wrap">
-          <input
-            class="input"
-            v-model="formData.productName"
-            placeholder="请输入或选择产品名称"
-            @input="onProductNameInput"
-            @focus="showHistory = true"
-            @blur="onProductNameBlur"
-          />
-          <!-- 历史记录下拉框 -->
-          <view class="history-dropdown" v-if="showHistory && filteredHistory.length">
-            <view 
-              class="history-item"
-              v-for="(item, index) in filteredHistory"
-              :key="index"
-              @tap="selectHistory(item)"
-            >
-              <text class="item-name">{{item.name}}</text>
-              <text class="item-price">￥{{formatPrice(item.price)}}</text>
+      <!-- 主体表单区 -->
+      <view class="form-section">
+        <!-- 新增供应商名称 -->
+        <view class="form-item">
+          <text class="label"><text class="required">*</text>供应商名称</text>
+          <view class="input-wrap">
+            <input
+              class="input"
+              v-model="formData.supplierName"
+              placeholder="请输入或选择供应商名称"
+              @focus="showSupplierList = true"
+              @blur="onSupplierNameBlur"
+            />
+            <!-- 供应商列表下拉框 -->
+            <view class="history-dropdown" v-if="showSupplierList && filteredSuppliers.length">
+              <view 
+                class="history-item"
+                v-for="(item, index) in filteredSuppliers"
+                :key="index"
+                @tap="selectSupplier(item)"
+              >
+                <text class="item-name">{{item.name}}</text>
+                <text class="item-code">{{item.code}}</text>
+              </view>
             </view>
           </view>
         </view>
-      </view>
 
-      <!-- 数量 -->
-      <view class="form-item">
-        <text class="label"><text class="required">*</text>数量</text>
-        <view class="stepper">
-          <text class="step-btn" @tap="updateQuantity(-1)">-</text>
-          <input
-            class="step-input"
-            type="number"
-            v-model="formData.quantity"
-            @input="validateQuantity"
-          />
-          <text class="step-btn" @tap="updateQuantity(1)">+</text>
-        </view>
-      </view>
-
-      <!-- 单价 -->
-      <view class="form-item">
-        <text class="label"><text class="required">*</text>单价</text>
-        <view class="price-input-wrap">
-          <input
-            class="input"
-            type="digit"
-            v-model="formData.price"
-            :class="{'price-warning': isPriceWarning}"
-            @input="validatePrice"
-          />
-          <view class="price-tips" v-if="priceInfo.show">
-            <text class="tip-item">历史均价：￥{{formatPrice(priceInfo.avgPrice)}}</text>
-            <text class="tip-item">上次价格：￥{{formatPrice(priceInfo.lastPrice)}}</text>
+        <!-- 产品名称 -->
+        <view class="form-item">
+          <text class="label"><text class="required">*</text>产品名称</text>
+          <view class="input-wrap">
+            <input
+              class="input"
+              v-model="formData.productName"
+              placeholder="请输入或选择产品名称"
+              @input="onProductNameInput"
+              @focus="showHistory = true"
+              @blur="onProductNameBlur"
+            />
+            <!-- 历史记录下拉框 -->
+            <view class="history-dropdown" v-if="showHistory && filteredHistory.length">
+              <view 
+                class="history-item"
+                v-for="(item, index) in filteredHistory"
+                :key="index"
+                @tap="selectHistory(item)"
+              >
+                <text class="item-name">{{item.name}}</text>
+                <text class="item-price">￥{{formatPrice(item.price)}}</text>
+              </view>
+            </view>
           </view>
         </view>
+
+        <!-- 数量 -->
+        <view class="form-item">
+          <text class="label"><text class="required">*</text>数量</text>
+          <view class="stepper">
+            <text class="step-btn" @tap="updateQuantity(-1)">-</text>
+            <input
+              class="step-input"
+              type="number"
+              v-model="formData.quantity"
+              @input="validateQuantity"
+            />
+            <text class="step-btn" @tap="updateQuantity(1)">+</text>
+          </view>
+        </view>
+
+        <!-- 单价 -->
+        <view class="form-item">
+          <text class="label"><text class="required">*</text>单价</text>
+          <view class="price-input-wrap">
+            <input
+              class="input"
+              type="digit"
+              v-model="formData.price"
+              :class="{'price-warning': isPriceWarning}"
+              @input="validatePrice"
+            />
+            <view class="price-tips" v-if="priceInfo.show">
+              <text class="tip-item">历史均价：￥{{formatPrice(priceInfo.avgPrice)}}</text>
+              <text class="tip-item">上次价格：￥{{formatPrice(priceInfo.lastPrice)}}</text>
+            </view>
+          </view>
+        </view>
+
+        <!-- 总价展示 -->
+        <view class="total-section">
+          <text class="total-label">总价</text>
+          <text class="total-value">￥{{formatPrice(totalAmount)}}</text>
+        </view>
       </view>
 
-      <!-- 总价展示 -->
-      <view class="total-section">
-        <text class="total-label">总价</text>
-        <text class="total-value">￥{{formatPrice(totalAmount)}}</text>
+      <!-- 添加消息通知入口 -->
+      <view class="message-entry" @tap="toMessage">
+        <text class="message-icon">📨</text>
+        <text class="message-badge" v-if="unreadCount">{{unreadCount}}</text>
       </view>
-    </view>
+      
+      <!-- 添加快捷操作区 -->
+      <view class="quick-actions">
+        <view class="action-item" @tap="toExport">
+          <text class="action-icon">📊</text>
+          <text class="action-text">导出数据</text>
+        </view>
+        <view class="action-item" @tap="toPrint">
+          <text class="action-icon">🖨</text>
+          <text class="action-text">打印记录</text>
+        </view>
+      </view>
+      
+    </scroll-view>
 
     <!-- 底部导航 -->
     <view class="footer">
@@ -107,11 +161,14 @@
 </template>
 
 <script>
+import supplierApi from '@/api/supplier'
+
 export default {
   data() {
     return {
       // 表单数据
       formData: {
+        supplierName: '',
         productName: '',
         quantity: 1,
         price: ''
@@ -132,7 +189,16 @@ export default {
         minPrice: 0 // 成本价
       },
       // 网络状态
-      isOffline: false
+      isOffline: false,
+      refreshing: false,
+      unreadCount: 0,
+      // 添加防抖定时器
+      inputTimer: null,
+      // 添加产品缓存
+      productCache: new Map(),
+      // 新增供应商相关数据
+      supplierList: [], // 供应商列表
+      showSupplierList: false,
     }
   },
   computed: {
@@ -154,10 +220,18 @@ export default {
     },
     // 是否可提交
     canSubmit() {
-      return this.formData.productName.length >= 2 && 
+      return this.formData.supplierName.length >= 2 && 
+        this.formData.productName.length >= 2 && 
         this.formData.quantity >= 1 &&
         this.formData.price >= this.priceInfo.minPrice
-    }
+    },
+    // 新增供应商列表过滤计算属性
+    filteredSuppliers() {
+      if(!this.formData.supplierName) return this.supplierList
+      return this.supplierList
+        .filter(item => item.name.includes(this.formData.supplierName))
+        .slice(0, 5)
+    },
   },
   onLoad() {
     // 初始化数据
@@ -176,6 +250,10 @@ export default {
     // 初始化数据
     async initData() {
       try {
+        // 获取供应商列表
+        const { data } = await supplierApi.getSupplierList()
+        this.supplierList = data.list || []
+        
         // TODO: 调用接口获取数据
         this.todayStats = {
           count: 5,
@@ -200,20 +278,34 @@ export default {
       }
     },
     
-    // 扫码处理
-    handleScan() {
-      uni.scanCode({
-        success: (res) => {
-          // TODO: 处理扫码结果
-          console.log('扫码结果：', res)
-        }
-      })
+    // 下拉刷新
+    async onRefresh() {
+      this.refreshing = true
+      try {
+        await this.initData()
+      } finally {
+        this.refreshing = false
+      }
     },
     
-    // 产品名称输入
+    // 优化产品名称输入处理
     onProductNameInput() {
-      this.showHistory = true
-      this.saveDraft()
+      clearTimeout(this.inputTimer)
+      this.inputTimer = setTimeout(async () => {
+        if (this.formData.productName.length >= 2) {
+          // 先查缓存
+          if (this.productCache.has(this.formData.productName)) {
+            this.priceInfo = this.productCache.get(this.formData.productName)
+          } else {
+            // 获取价格参考
+            const res = await supplierApi.getPriceReference(this.formData.productName)
+            this.priceInfo = res.data
+            // 写入缓存
+            this.productCache.set(this.formData.productName, res.data)
+          }
+          this.priceInfo.show = true
+        }
+      }, 300)
     },
     
     // 产品名称失焦
@@ -292,6 +384,7 @@ export default {
         })
         // 清空表单
         this.formData = {
+          supplierName: '',
           productName: '',
           quantity: 1,
           price: ''
@@ -368,7 +461,75 @@ export default {
       uni.navigateTo({
         url: '/pages/supplier/history'
       })
-    }
+    },
+    
+    // 优化扫码处理
+    async handleScan() {
+      try {
+        const { result } = await uni.scanCode()
+        const { data } = await supplierApi.getProductByCode(result)
+        // 自动填充产品信息
+        this.formData.productName = data.name
+        this.formData.price = data.suggestedPrice
+        this.priceInfo = {
+          show: true,
+          avgPrice: data.avgPrice,
+          lastPrice: data.lastPrice,
+          minPrice: data.minPrice
+        }
+      } catch (e) {
+        uni.showToast({
+          title: '扫码失败',
+          icon: 'none'
+        })
+      }
+    },
+    
+    // 导出数据
+    async toExport() {
+      try {
+        uni.showLoading({ title: '导出中' })
+        const { data } = await supplierApi.exportData()
+        // 处理文件下载
+        await uni.downloadFile({
+          url: data.url,
+          success: (res) => {
+            uni.openDocument({
+              filePath: res.tempFilePath
+            })
+          }
+        })
+      } catch (e) {
+        uni.showToast({
+          title: '导出失败',
+          icon: 'none'
+        })
+      } finally {
+        uni.hideLoading()
+      }
+    },
+    
+    // 打印记录
+    toPrint() {
+      // 跳转打印页面
+      uni.navigateTo({
+        url: '/pages/supplier/print'
+      })
+    },
+    
+    // 选择供应商
+    selectSupplier(item) {
+      this.formData.supplierName = item.name
+      this.showSupplierList = false
+      this.saveDraft()
+    },
+    
+    // 供应商名称失焦
+    onSupplierNameBlur() {
+      setTimeout(() => {
+        this.showSupplierList = false
+      }, 200)
+    },
   }
 }
 </script>
@@ -608,5 +769,72 @@ export default {
   text-align: center;
   font-size: 24rpx;
   color: #faad14;
+}
+
+/* 添加新样式 */
+.scroll-container {
+  height: calc(100vh - 120rpx);
+}
+
+.message-entry {
+  position: fixed;
+  right: 40rpx;
+  bottom: 200rpx;
+  width: 80rpx;
+  height: 80rpx;
+  background: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2rpx 10rpx rgba(0,0,0,0.1);
+}
+
+.message-badge {
+  position: absolute;
+  top: -6rpx;
+  right: -6rpx;
+  min-width: 32rpx;
+  height: 32rpx;
+  padding: 0 6rpx;
+  background: #ff4d4f;
+  border-radius: 16rpx;
+  color: #fff;
+  font-size: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quick-actions {
+  display: flex;
+  justify-content: space-around;
+  padding: 20rpx;
+  background: #fff;
+  margin: 20rpx;
+  border-radius: 12rpx;
+}
+
+.action-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.action-icon {
+  font-size: 40rpx;
+  margin-bottom: 10rpx;
+}
+
+.action-text {
+  font-size: 24rpx;
+  color: #666;
+}
+
+/* 新增供应商列表项样式 */
+.item-code {
+  font-size: 24rpx;
+  color: #999;
+  margin-left: 20rpx;
 }
 </style> 

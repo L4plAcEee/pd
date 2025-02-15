@@ -65,5 +65,25 @@ export default {
         loading.hide()
       }, 500)
     })
+  },
+
+  // 获取订单详情
+  getOrderDetail(orderId) {
+    return new Promise((resolve) => {
+      loading.show('加载订单详情...')
+      setTimeout(() => {
+        resolve({
+          data: {
+            productName: '精磨面粉',
+            productCode: 'MF-001',
+            quantity: 1000,
+            unit: 'kg',
+            source: '磨房车间',
+            time: '2023-12-01 10:30'
+          }
+        })
+        loading.hide()
+      }, 500)
+    })
   }
 } 

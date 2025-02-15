@@ -76,6 +76,42 @@
 					"style": {
 						"navigationBarTitleText": "管理后台"
 					}
+				},
+				{
+					"path": "supplier/index",
+					"style": {
+						"navigationBarTitleText": "供应商管理"
+					}
+				},
+				{
+					"path": "production/index",
+					"style": {
+						"navigationBarTitleText": "生产管理"
+					}
+				},
+				{
+					"path": "quality/index",
+					"style": {
+						"navigationBarTitleText": "品控管理"
+					}
+				},
+				{
+					"path": "warehouse/index",
+					"style": {
+						"navigationBarTitleText": "仓库管理"
+					}
+				},
+				{
+					"path": "users/index",
+					"style": {
+						"navigationBarTitleText": "用户管理"
+					}
+				},
+				{
+					"path": "statistics/index",
+					"style": {
+						"navigationBarTitleText": "数据统计"
+					}
 				}
 			]
 		}
@@ -115,7 +151,8 @@
 	"easycom": {
 		"autoscan": true,
 		"custom": {
-			"^pd-(.*)": "@/components/pd-$1/pd-$1.vue"
+			"^uni-(.*)": "@/node_modules/@dcloudio/uni-ui/lib/uni-$1/uni-$1.vue",
+			"^qiun-(.*)": "@/node_modules/qiun-data-charts/components/qiun-$1/qiun-$1.vue"
 		}
 	}
 }

@@ -1,41 +1,10 @@
 <template>
   <view class="admin-container">
-    <!-- 顶部快捷操作 -->
-    <view class="quick-actions">
-      <view 
-        class="action-item"
-        v-for="(action, index) in quickActions"
-        :key="index"
-        @tap="handleQuickAction(action.type)"
-      >
-        <text class="action-icon">{{action.icon}}</text>
-        <view class="action-info">
-          <text class="action-name">{{action.name}}</text>
-          <text class="action-desc">{{action.desc}}</text>
-        </view>
-      </view>
-    </view>
-
-    <!-- 待办事项 -->
-    <view class="todo-section">
-      <view class="section-header">
-        <text class="section-title">待办事项</text>
-        <text class="count-badge">{{todoList.length}}</text>
-      </view>
-      
-      <view class="todo-list">
-        <view 
-          class="todo-item"
-          v-for="(item, index) in todoList"
-          :key="index"
-          @tap="handleTodo(item)"
-        >
-          <view class="todo-content">
-            <text class="todo-tag" :class="item.type">{{item.tag}}</text>
-            <text class="todo-text">{{item.content}}</text>
-          </view>
-          <text class="todo-time">{{item.time}}</text>
-        </view>
+    <!-- 顶部统计卡片 -->
+    <view class="stat-cards">
+      <view class="stat-card" v-for="(stat, index) in stats" :key="index">
+        <text class="stat-value">{{stat.value}}</text>
+        <text class="stat-label">{{stat.label}}</text>
       </view>
     </view>
 
@@ -49,194 +18,98 @@
       >
         <text class="module-icon">{{module.icon}}</text>
         <text class="module-name">{{module.name}}</text>
-        <text class="module-desc">{{module.desc}}</text>
+        <text class="badge" v-if="module.badge">{{module.badge}}</text>
       </view>
     </view>
 
-    <!-- 权限确认弹窗 -->
-    <view class="auth-modal" v-if="showAuth">
-      <view class="modal-content">
-        <text class="modal-title">权限验证</text>
-        <input 
-          class="auth-input"
-          type="password"
-          v-model="authPassword"
-          placeholder="请输入管理密码"
-        />
-        <view class="modal-btns">
-          <button 
-            class="cancel-btn"
-            @tap="cancelAuth"
-          >取消</button>
-          <button 
-            class="confirm-btn"
-            @tap="confirmAuth"
-          >确认</button>
+    <!-- 待处理事项 -->
+    <view class="pending-tasks">
+      <view class="section-title">
+        <text>待处理事项</text>
+        <text class="more" @tap="navigateTo('/pages/admin/tasks')">全部</text>
+      </view>
+      
+      <view class="task-list">
+        <view 
+          class="task-item"
+          v-for="(task, index) in pendingTasks"
+          :key="index"
+          @tap="handleTask(task)"
+        >
+          <view class="task-info">
+            <text class="task-type" :class="task.type">{{task.typeText}}</text>
+            <text class="task-title">{{task.title}}</text>
+          </view>
+          <text class="task-time">{{task.time}}</text>
         </view>
       </view>
     </view>
-
-    <!-- Toast提示 -->
-    <pd-toast ref="toast" />
   </view>
 </template>
 
 <script>
-import PdToast from '@/components/pd-toast/pd-toast'
-
 export default {
-  components: {
-    PdToast,
-  },
-
   data() {
     return {
-      // 快捷操作
-      quickActions: [
-        {
-          icon: '📦',
-          name: '库存调整',
-          desc: '快速调整库存',
-          type: 'storage'
-        },
-        {
-          icon: '📝',
-          name: '订单审核',
-          desc: '待处理订单',
-          type: 'order'
-        },
-        {
-          icon: '💰',
-          name: '结算处理',
-          desc: '本月待结算',
-          type: 'settlement'
-        }
+      // 统计数据
+      stats: [
+        { label: '今日订单', value: 128 },
+        { label: '待审核', value: 15 },
+        { label: '库存预警', value: 3 }
       ],
-
-      // 待办事项
-      todoList: [
-        {
-          type: 'warning',
-          tag: '库存',
-          content: '原料库存不足，请及时处理',
-          time: '10:30'
-        },
-        {
-          type: 'info',
-          tag: '订单',
-          content: '新订单待审核',
-          time: '09:45'
-        }
-      ],
-
+      
       // 功能模块
       modules: [
-        {
-          icon: '📊',
-          name: '订单管理',
-          desc: '订单查询与处理',
-          path: '/pages/admin/orders'
-        },
-        {
-          icon: '👥',
-          name: '用户管理',
-          desc: '用户权限控制',
-          path: '/pages/admin/users'
-        },
-        {
-          icon: '🏭',
-          name: '仓库监控',
-          desc: '库存实时监控',
-          path: '/pages/admin/storage'
-        },
-        {
-          icon: '💳',
-          name: '财务中心',
-          desc: '结算与对账',
-          path: '/pages/admin/finance'
-        }
+        { name: '供应商管理', icon: '🏭', path: '/pages/admin/supplier/index' },
+        { name: '生产管理', icon: '⚙️', path: '/pages/admin/production/index' },
+        { name: '品控管理', icon: '✅', path: '/pages/admin/quality/index' },
+        { name: '仓库管理', icon: '📦', path: '/pages/admin/warehouse/index' },
+        { name: '用户管理', icon: '👥', path: '/pages/admin/users/index' },
+        { name: '数据统计', icon: '📊', path: '/pages/admin/statistics/index' }
       ],
-
-      // 权限验证
-      showAuth: false,
-      authPassword: '',
-      pendingAction: null
-    }
-  },
-
-  methods: {
-    // 处理快捷操作
-    handleQuickAction(type) {
-      switch(type) {
-        case 'storage':
-          this.showAuthModal(() => {
-            uni.navigateTo({ url: '/pages/admin/storage' })
-          })
-          break
-        case 'order':
-          uni.navigateTo({ url: '/pages/admin/orders' })
-          break
-        case 'settlement':
-          this.showAuthModal(() => {
-            uni.navigateTo({ url: '/pages/admin/finance' })
-          })
-          break
-      }
-    },
-
-    // 显示权限验证
-    showAuthModal(callback) {
-      this.pendingAction = callback
-      this.showAuth = true
-    },
-
-    // 取消验证
-    cancelAuth() {
-      this.showAuth = false
-      this.authPassword = ''
-      this.pendingAction = null
-    },
-
-    // 确认验证
-    async confirmAuth() {
-      if(!this.authPassword) {
-        this.$refs.toast.show({
-          type: 'warning',
-          message: '请输入密码'
-        })
-        return
-      }
-
-      try {
-        await new Promise(resolve => setTimeout(resolve, 500))
-        this.showAuth = false
-        this.authPassword = ''
-        
-        if(this.pendingAction) {
-          this.pendingAction()
-          this.pendingAction = null
+      
+      // 待处理任务
+      pendingTasks: [
+        {
+          type: 'quality',
+          typeText: '品控',
+          title: '新增5个待检验订单',
+          time: '10分钟前'
+        },
+        {
+          type: 'warehouse',
+          typeText: '仓库',
+          title: '3个产品库存不足',
+          time: '30分钟前'
         }
-      } catch(e) {
-        this.$refs.toast.show({
-          type: 'error',
-          message: '验证失败'
-        })
-      }
-    },
-
-    // 处理待办
-    handleTodo(item) {
-      console.log('处理待办:', item)
-    },
-
-    // 页面跳转
-    navigateTo(url) {
-      uni.navigateTo({ url })
+      ]
     }
   },
-
-  onShow() {
-    // 删除 refreshData 调用
+  
+  methods: {
+    // 页面导航
+    navigateTo(path) {
+      // 判断是否是 tabBar 页面
+      const tabBarPages = ['/pages/index/index', '/pages/message/message', '/pages/user/user']
+      if (tabBarPages.includes(path)) {
+        uni.switchTab({ url: path })
+      } else {
+        uni.navigateTo({ url: path })
+      }
+    },
+    
+    // 处理任务
+    handleTask(task) {
+      // 根据任务类型跳转到对应页面
+      const pathMap = {
+        quality: '/pages/admin/quality/index',
+        warehouse: '/pages/admin/warehouse/index'
+      }
+      
+      if(pathMap[task.type]) {
+        this.navigateTo(pathMap[task.type])
+      }
+    }
   }
 }
 </script>
@@ -244,68 +117,108 @@ export default {
 <style>
 .admin-container {
   min-height: 100vh;
-  background: #f8f8f8;
+  background: #f5f5f5;
   padding: 20rpx;
 }
 
-/* 快捷操作 */
-.quick-actions {
+/* 统计卡片 */
+.stat-cards {
+  display: flex;
+  gap: 20rpx;
+  margin-bottom: 30rpx;
+}
+
+.stat-card {
+  flex: 1;
+  background: #fff;
+  border-radius: 12rpx;
+  padding: 20rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-value {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10rpx;
+}
+
+.stat-label {
+  font-size: 24rpx;
+  color: #666;
+}
+
+/* 功能模块 */
+.module-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 20rpx;
   margin-bottom: 30rpx;
 }
 
-.action-item {
+.module-item {
   background: #fff;
-  padding: 20rpx;
   border-radius: 12rpx;
+  padding: 30rpx;
   display: flex;
+  flex-direction: column;
   align-items: center;
+  position: relative;
 }
 
-.action-icon {
-  font-size: 40rpx;
-  margin-right: 20rpx;
+.module-icon {
+  font-size: 48rpx;
+  margin-bottom: 16rpx;
 }
 
-.action-info {
-  flex: 1;
-}
-
-.action-name {
+.module-name {
   font-size: 28rpx;
   color: #333;
-  font-weight: bold;
-  display: block;
 }
 
-.action-desc {
-  font-size: 24rpx;
-  color: #999;
-}
-
-/* 待办事项 */
-.todo-section {
-  background: #fff;
-  border-radius: 12rpx;
-  padding: 20rpx;
-  margin-bottom: 30rpx;
-}
-
-.count-badge {
-  background: #1890ff;
+.badge {
+  position: absolute;
+  top: 10rpx;
+  right: 10rpx;
+  background: #ff4d4f;
   color: #fff;
   font-size: 24rpx;
   padding: 4rpx 12rpx;
   border-radius: 20rpx;
 }
 
-.todo-list {
-  margin-top: 20rpx;
+/* 待处理事项 */
+.pending-tasks {
+  background: #fff;
+  border-radius: 12rpx;
+  padding: 20rpx;
 }
 
-.todo-item {
+.section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.more {
+  font-size: 28rpx;
+  color: #1890ff;
+  font-weight: normal;
+}
+
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.task-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -313,130 +226,39 @@ export default {
   border-bottom: 1rpx solid #f0f0f0;
 }
 
-.todo-content {
+.task-item:last-child {
+  border-bottom: none;
+}
+
+.task-info {
   display: flex;
   align-items: center;
-  flex: 1;
+  gap: 16rpx;
 }
 
-.todo-tag {
-  font-size: 24rpx;
+.task-type {
   padding: 4rpx 12rpx;
   border-radius: 4rpx;
-  margin-right: 12rpx;
+  font-size: 24rpx;
 }
 
-.todo-tag.warning {
-  background: #fff7e6;
-  color: #faad14;
-}
-
-.todo-tag.info {
+.task-type.quality {
   background: #e6f7ff;
   color: #1890ff;
 }
 
-.todo-text {
+.task-type.warehouse {
+  background: #fff7e6;
+  color: #faad14;
+}
+
+.task-title {
   font-size: 28rpx;
   color: #333;
 }
 
-.todo-time {
+.task-time {
   font-size: 24rpx;
   color: #999;
-}
-
-/* 功能模块 */
-.module-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20rpx;
-}
-
-.module-item {
-  background: #fff;
-  padding: 30rpx;
-  border-radius: 12rpx;
-}
-
-.module-icon {
-  font-size: 48rpx;
-  margin-bottom: 16rpx;
-  display: block;
-}
-
-.module-name {
-  font-size: 32rpx;
-  color: #333;
-  font-weight: bold;
-  margin-bottom: 8rpx;
-  display: block;
-}
-
-.module-desc {
-  font-size: 24rpx;
-  color: #999;
-}
-
-/* 权限弹窗 */
-.auth-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0,0,0,0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  width: 600rpx;
-  background: #fff;
-  border-radius: 12rpx;
-  padding: 40rpx;
-}
-
-.modal-title {
-  font-size: 32rpx;
-  color: #333;
-  font-weight: bold;
-  text-align: center;
-  margin-bottom: 30rpx;
-}
-
-.auth-input {
-  height: 80rpx;
-  background: #f8f8f8;
-  border-radius: 8rpx;
-  padding: 0 20rpx;
-  font-size: 28rpx;
-  margin-bottom: 30rpx;
-}
-
-.modal-btns {
-  display: flex;
-  gap: 20rpx;
-}
-
-.cancel-btn, .confirm-btn {
-  flex: 1;
-  height: 80rpx;
-  line-height: 80rpx;
-  text-align: center;
-  border-radius: 8rpx;
-  font-size: 28rpx;
-}
-
-.cancel-btn {
-  background: #f5f5f5;
-  color: #666;
-}
-
-.confirm-btn {
-  background: #1890ff;
-  color: #fff;
 }
 </style> 
